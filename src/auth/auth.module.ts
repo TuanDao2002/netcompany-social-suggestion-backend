@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from "./controller/auth.controller";
-import { AuthService } from "./service/auth.service";
-import { ConfigModule } from '@nestjs/config';
-import { MicrosoftStrategy } from "./strategy/microsoft.strategy";
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from "./strategy/jwt.strategy";
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
   imports: [
@@ -10,9 +9,9 @@ import { MicrosoftStrategy } from "./strategy/microsoft.strategy";
       envFilePath: ['./config/.env'],
       isGlobal: true,
     }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
-
-  controllers: [AuthController],
-  providers: [MicrosoftStrategy, AuthService],
+  providers: [JwtStrategy],
+  exports: [PassportModule],
 })
 export class AuthModule {}

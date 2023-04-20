@@ -27,6 +27,7 @@
     "@nestjs/passport": "^9.0.3",
     "@nestjs/platform-express": "^9.0.0",
     "@types/passport-azure-ad": "^4.3.1",
+    "jwks-rsa": "^3.0.1",
     "passport-azure-ad": "^4.3.5",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.1.13",
