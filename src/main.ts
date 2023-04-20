@@ -9,5 +9,6 @@ async function bootstrap() {
     credentials: true,
   });
   await app.listen(8080);
+  console.log(`Server listening on 8080`)
 }
 bootstrap();
