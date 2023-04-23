@@ -33,6 +33,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
+      path: '/'
     });
 
     res.json({ token });
@@ -46,6 +47,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
+      path: '/'
     });
     res.json({ msg: 'Logout' });
   }
