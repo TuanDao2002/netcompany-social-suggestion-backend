@@ -14,7 +14,10 @@ async function bootstrap() {
     }),
   );
   const configService = app.get<ConfigService>(ConfigService);
-  app.enableCors();
+  app.enableCors({
+    credentials: true,
+    origin: configService.get('APP_BASE_URL'),
+  });
   await app.listen(CommonConstant.PORT);
   console.log(`Server listening on port: ${CommonConstant.PORT}`);
 }
