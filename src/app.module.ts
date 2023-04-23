@@ -6,10 +6,10 @@ import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: './config/.env',
+      envFilePath: 'src/config/.env',
       isGlobal: true,
     }),
-    AuthModule
+    AuthModule,
   ],
   controllers: [],
   providers: [AppService],
