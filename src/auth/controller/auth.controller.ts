@@ -1,22 +1,47 @@
-import { Controller, Get, Headers, UnauthorizedException } from '@nestjs/common';
-import { AuthService } from "../service/auth.service";
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Res,
+  UseGuards
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
+import { CommonConstant } from "../../common/constant";
+import { AuthDto } from '../dto/auth.dto';
+import { JwtGuard } from '../guard/jwt.guard';
+import { CurrentUser } from "../guard/user.decorator";
+import { AuthService } from '../service/auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  @Get('')
-  async index(@Headers('authorization') authorization: string): Promise<string> {
-    const accessToken = authorization?.replace('Bearer ', '');
-    if (!accessToken) {
-      throw new UnauthorizedException('Access token missing');
-    }
+  @HttpCode(HttpStatus.OK)
+  @Post('')
+  async signIn(@Body() body: AuthDto, @Res() res: Response) {
+    const { microsoftIdToken } = body;
+    const token = await this.authService.signInWithMicrosoft(microsoftIdToken);
+    res.cookie('access_token', token, {
+      maxAge: CommonConstant.MAX_AGE,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
 
-    const isValid = await this.authService.validateAccessToken(accessToken);
-    if (!isValid) {
-      throw new UnauthorizedException('Access token invalid');
-    }
+    res.json({ token });
+  }
 
-    return 'Access token is valid';
+  @UseGuards(JwtGuard)
+  @Delete('logout')
+  async logOut(@Res() res: Response, @CurrentUser() user: any) {
+    res.cookie('access_token', '', { maxAge: 0 });
+    res.json({ msg: 'Logout' });
   }
 }

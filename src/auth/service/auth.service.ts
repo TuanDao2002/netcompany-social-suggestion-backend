@@ -1,29 +1,69 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
+import { CommonConstant } from "../../common/constant";
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+  ) {}
   private tenantID = this.configService.get('AZURE_AD_TENANT_ID');
-  private clientID = this.configService.get('AZURE_AD_CLIENT_ID')
-  async validateAccessToken(accessToken: string): Promise<boolean> {
+  private clientID = this.configService.get('AZURE_AD_CLIENT_ID');
+
+  public async signInWithMicrosoft(microsoftIdToken: string) {
+    if (!microsoftIdToken) {
+      throw new UnauthorizedException('Microsoft ID token missing');
+    }
+
+    const isValid = await this.validateAccessTokenMicrosoft(microsoftIdToken);
+    if (!isValid) {
+      throw new UnauthorizedException('Microsoft ID token invalid');
+    }
+
+    return this.signToken(1, 'tuan@gmail.com')
+  }
+
+  async signToken(
+    userId: number,
+    email: string,
+  ): Promise<string> {
+    const payload = {
+      sub: userId,
+      email,
+    };
+
+    const secret = this.configService.get('JWT_SECRET');
+
+    const token = await this.jwtService.signAsync(
+      payload,
+      {
+        expiresIn: CommonConstant.TOKEN_EXPIRE_IN,
+        secret: secret,
+      },
+    );
+
+    return token;
+  }
+
+  private async validateAccessTokenMicrosoft(
+    microsoftIdToken: string,
+  ): Promise<boolean> {
     try {
-      const decodedToken = jwt.decode(accessToken, { complete: true });
+      const decodedToken = jwt.decode(microsoftIdToken, { complete: true });
 
       // Verify the signature
       const header = decodedToken.header;
-      console.log("🚀 ~ file: auth.service.ts:17 ~ AuthService ~ validateAccessToken ~ header:", header)
       const signingKey = await this.getSigningKey(header.kid);
-      jwt.verify(accessToken, signingKey);
+      jwt.verify(microsoftIdToken, signingKey);
 
       // Verify the claims
       const claims = decodedToken.payload as jwt.JwtPayload;
-      console.log("🚀 ~ file: auth.service.ts:23 ~ AuthService ~ validateAccessToken ~ claims:", claims)
-      if (
-        claims.aud !== this.clientID
-      ) {
+      if (claims.aud !== this.clientID) {
         throw new Error('Invalid claims');
       }
 
@@ -34,21 +74,16 @@ export class AuthService {
     }
   }
 
-  async getSigningKey(kid: string): Promise<string> {
+  private async getSigningKey(kid: string): Promise<string> {
     const jwksUri = `https://login.microsoftonline.com/${this.tenantID}/discovery/v2.0/keys`;
 
     const response = await fetch(jwksUri);
     const jwks = await response.json();
-    console.log(
-      '🚀 ~ file: auth.service.ts:41 ~ AuthService ~ getSigningKey ~ jwks:',
-      jwks,
-    );
 
     const signingKey = jwks.keys.find(
       (key) => key.kid === kid && key.kty === 'RSA' && key.use === 'sig',
     );
-    
-    console.log("🚀 ~ file: auth.service.ts:51 ~ AuthService ~ getSigningKey ~ signingKey:", signingKey)
+
     if (!signingKey) {
       throw new Error('Signing key not found');
     }
@@ -58,7 +93,7 @@ export class AuthService {
     return publicKey;
   }
 
-  convertCertToPEM(cert: string): string {
+  private convertCertToPEM(cert: string): string {
     const certBody = cert.match(/.{1,64}/g).join('\n');
     const pem = `-----BEGIN CERTIFICATE-----\n${certBody}\n-----END CERTIFICATE-----\n`;
 
