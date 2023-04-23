@@ -6,14 +6,14 @@ import {
   HttpStatus,
   Post,
   Res,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { CommonConstant } from "../../common/constant";
+import { CommonConstant } from '../../common/constant';
 import { AuthDto } from '../dto/auth.dto';
 import { JwtGuard } from '../guard/jwt.guard';
-import { CurrentUser } from "../guard/user.decorator";
+import { CurrentUser } from '../guard/user.decorator';
 import { AuthService } from '../service/auth.service';
 
 @Controller('auth')
@@ -41,7 +41,12 @@ export class AuthController {
   @UseGuards(JwtGuard)
   @Delete('logout')
   async logOut(@Res() res: Response, @CurrentUser() user: any) {
-    res.cookie('access_token', '', { maxAge: 0 });
+    res.cookie('access_token', '', {
+      maxAge: 0,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
     res.json({ msg: 'Logout' });
   }
 }
