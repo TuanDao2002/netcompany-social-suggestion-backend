@@ -33,6 +33,7 @@ export class AuthService {
     let accountStatus: string;
     let accessToken: string;
     const findUser = await this.userRepository.findByEmail(email);
+    console.log("🚀 ~ file: auth.service.ts:36 ~ AuthService ~ signInWithMicrosoft ~ findUser:", findUser)
     if (!findUser) {
       await this.userRepository.create({
         isVerified: false,
