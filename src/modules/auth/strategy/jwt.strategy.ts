@@ -18,16 +18,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   private static extractJWTFromCookie(req: Request): string | null {
     if (req.cookies && req.cookies.access_token) {
-      console.log("🚀 ~ file: jwt.strategy.ts:21 ~ JwtStrategy ~ extractJWTFromCookie ~ cookies:", req.cookies)
       return req.cookies.access_token;
     }
     return null;
   }
 
-  async validate(payload: { sub: number; email: string }) {
+  async validate(payload: { sub: string; email: string }) {
     // delete user.hash;
     // attach the user object to request object
-    if (payload.sub === 1 && payload.email === 'tuan@gmail.com') {
+    if (payload.sub === '1' && payload.email === 'S3877347@rmit.edu.vn') {
       const user = payload;
       return user;
     }

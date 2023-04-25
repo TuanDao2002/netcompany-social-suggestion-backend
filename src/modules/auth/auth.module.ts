@@ -4,7 +4,7 @@ import { AuthController } from './controller/auth.controller';
 import { AuthService } from './service/auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategy/jwt.strategy';
-import { CommonConstant } from "../common/constant";
+import { CommonConstant } from '../../common/constant';
 @Module({
   imports: [
     ConfigModule,

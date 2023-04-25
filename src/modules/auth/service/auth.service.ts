@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
-import { CommonConstant } from "../../common/constant";
+import { CommonConstant } from '../../../common/constant';
 
 @Injectable()
 export class AuthService {
@@ -19,18 +19,15 @@ export class AuthService {
       throw new UnauthorizedException('Microsoft ID token missing');
     }
 
-    const isValid = await this.validateAccessTokenMicrosoft(microsoftIdToken);
-    if (!isValid) {
+    const email = await this.validateAccessTokenMicrosoft(microsoftIdToken);
+    if (!email) {
       throw new UnauthorizedException('Microsoft ID token invalid');
     }
 
-    return this.signToken(1, 'tuan@gmail.com')
+    return this.signToken('1', email);
   }
 
-  async signToken(
-    userId: number,
-    email: string,
-  ): Promise<string> {
+  async signToken(userId: string, email: string): Promise<string> {
     const payload = {
       sub: userId,
       email,
@@ -38,20 +35,17 @@ export class AuthService {
 
     const secret = this.configService.get('JWT_SECRET');
 
-    const token = await this.jwtService.signAsync(
-      payload,
-      {
-        expiresIn: CommonConstant.TOKEN_EXPIRE_IN,
-        secret: secret,
-      },
-    );
+    const token = await this.jwtService.signAsync(payload, {
+      expiresIn: CommonConstant.TOKEN_EXPIRE_IN,
+      secret: secret,
+    });
 
     return token;
   }
 
   private async validateAccessTokenMicrosoft(
     microsoftIdToken: string,
-  ): Promise<boolean> {
+  ): Promise<string> {
     try {
       const decodedToken = jwt.decode(microsoftIdToken, { complete: true });
 
@@ -62,14 +56,14 @@ export class AuthService {
 
       // Verify the claims
       const claims = decodedToken.payload as jwt.JwtPayload;
-      if (claims.aud !== this.clientID) {
+      if (claims.aud !== this.clientID && claims.preferred_username) {
         throw new Error('Invalid claims');
       }
 
-      return true;
+      return claims.preferred_username;
     } catch (err) {
       console.error(err);
-      return false;
+      return null;
     }
   }
 
