@@ -4,17 +4,23 @@ import { JwtService } from '@nestjs/jwt';
 import jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import { CommonConstant } from '../../../common/constant';
+import { UserRepository } from '../../user/repository/user.repository';
+import { AccountStatus } from '../../../common/account-status.enum';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly userRepository: UserRepository,
   ) {}
   private tenantID = this.configService.get('AZURE_AD_TENANT_ID');
   private clientID = this.configService.get('AZURE_AD_CLIENT_ID');
 
-  public async signInWithMicrosoft(microsoftIdToken: string) {
+  public async signInWithMicrosoft(microsoftIdToken: string): Promise<{
+    accountStatus: string;
+    accessToken: string;
+  }> {
     if (!microsoftIdToken) {
       throw new UnauthorizedException('Microsoft ID token missing');
     }
@@ -24,7 +30,25 @@ export class AuthService {
       throw new UnauthorizedException('Microsoft ID token invalid');
     }
 
-    return this.signToken('1', email);
+    let accountStatus: string;
+    let accessToken: string;
+    const findUser = await this.userRepository.findByEmail(email);
+    if (!findUser) {
+      await this.userRepository.create({
+        isVerified: false,
+        email,
+      });
+    }
+
+    if (!findUser || !findUser.isVerified) {
+      accountStatus = AccountStatus.UNVERIFIED;
+      accessToken = '';
+    } else {
+      accountStatus = AccountStatus.VERIFIED;
+      accessToken = await this.signToken(findUser._id.toHexString(), email);
+    }
+
+    return { accountStatus, accessToken };
   }
 
   async signToken(userId: string, email: string): Promise<string> {

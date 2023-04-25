@@ -15,6 +15,7 @@ import { AuthDto } from '../dto/auth.dto';
 import { JwtGuard } from '../guard/jwt.guard';
 import { CurrentUser } from '../guard/user.decorator';
 import { AuthService } from '../service/auth.service';
+import { AccountStatus } from '../../../common/account-status.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -25,24 +26,35 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('')
-  async signIn(@Body() body: AuthDto, @Res() res: Response) {
+  async signIn(@Body() body: AuthDto, @Res() res: Response): Promise<void> {
     const { microsoftIdToken } = body;
-    const token = await this.authService.signInWithMicrosoft(microsoftIdToken);
-    res.cookie('access_token', token, {
-      maxAge: CommonConstant.MAX_AGE,
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      path: '/',
-    });
+    const { accountStatus, accessToken } =
+      await this.authService.signInWithMicrosoft(microsoftIdToken);
 
-    res.json({ token });
+    if (accountStatus === AccountStatus.UNVERIFIED) {
+      res
+        .status(HttpStatus.NOT_ACCEPTABLE)
+        .json({ msg: 'The account is not verified yet' });
+    } else {
+      res.cookie('access_token', accessToken, {
+        maxAge: CommonConstant.MAX_AGE,
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
+      });
+
+      res.json({ accessToken });
+    }
   }
 
   @UseGuards(JwtGuard)
   @Delete('logout')
   async logOut(@Res() res: Response, @CurrentUser() user: any) {
-    console.log("🚀 ~ file: auth.controller.ts:45 ~ AuthController ~ logOut ~ user:", user)
+    console.log(
+      '🚀 ~ file: auth.controller.ts:45 ~ AuthController ~ logOut ~ user:',
+      user,
+    );
     res.cookie('access_token', '', {
       maxAge: 0,
       httpOnly: true,
