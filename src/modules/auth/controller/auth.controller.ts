@@ -31,7 +31,7 @@ export class AuthController {
   @Post('')
   async signIn(@Body() body: AuthDto, @Res() res: Response): Promise<void> {
     const { microsoftIdToken } = body;
-    const { accountStatus, accessToken, idToken } =
+    const { accountStatus, accessToken, idToken, user } =
       await this.authService.signInWithMicrosoft(microsoftIdToken);
 
     if (accountStatus === AccountStatus.UNVERIFIED) {
@@ -47,12 +47,12 @@ export class AuthController {
         path: '/',
       });
 
-      res.json({ accessToken });
+      res.json({ accessToken, user });
     }
   }
 
   @Post('verify')
-  async verify(@Body() body: VerifyUserDto, @Res() res: Response) {
+  async verify(@Body() body: VerifyUserDto, @Res() res: Response): Promise<void> {
     const { accountStatus, accessToken, verifiedUser } =
       await this.authService.verify(body);
 

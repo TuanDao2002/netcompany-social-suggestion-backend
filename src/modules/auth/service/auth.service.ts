@@ -20,9 +20,10 @@ export class AuthService {
   private clientID = this.configService.get('AZURE_AD_CLIENT_ID');
 
   public async signInWithMicrosoft(microsoftIdToken: string): Promise<{
-    accountStatus: string;
-    accessToken: string;
-    idToken: string;
+    accountStatus: string,
+    accessToken: string,
+    idToken: string,
+    user: UserDocument
   }> {
     if (!microsoftIdToken) {
       throw new UnauthorizedException('Microsoft ID token missing');
@@ -59,7 +60,7 @@ export class AuthService {
       accessToken = await this.signToken(findUser._id.toHexString(), email);
     }
 
-    return { accountStatus, accessToken, idToken: microsoftIdToken };
+    return { accountStatus, accessToken, idToken: microsoftIdToken, user: findUser };
   }
 
   async verify(payload: VerifyUserDto): Promise<{
