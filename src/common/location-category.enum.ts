@@ -1,5 +1,5 @@
 export enum LocationCategory {
-    RESTAURANT,
-    SIGHT,
-    ENTERTAINMENT
+  RESTAURANT = 'RESTAURANT',
+  SIGHT = 'SIGHT',
+  ENTERTAINMENT = 'ENTERTAINMENT',
 }

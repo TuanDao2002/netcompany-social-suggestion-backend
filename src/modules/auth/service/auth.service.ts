@@ -6,6 +6,8 @@ import fetch from 'node-fetch';
 import { CommonConstant } from '../../../common/constant';
 import { UserRepository } from '../../user/repository/user.repository';
 import { AccountStatus } from '../../../common/account-status.enum';
+import { VerifyUserDto } from '../../user/dto/verify-user.dto';
+import { UserDocument } from "../../user/schema/users.schema";
 
 @Injectable()
 export class AuthService {
@@ -20,6 +22,7 @@ export class AuthService {
   public async signInWithMicrosoft(microsoftIdToken: string): Promise<{
     accountStatus: string;
     accessToken: string;
+    idToken: string;
   }> {
     if (!microsoftIdToken) {
       throw new UnauthorizedException('Microsoft ID token missing');
@@ -30,10 +33,17 @@ export class AuthService {
       throw new UnauthorizedException('Microsoft ID token invalid');
     }
 
+    if (!email.match(CommonConstant.NETCOMPANY_EMAIL_REGEX)) {
+      // throw new BadRequestException('Invalid Netcompany email'); // for production only
+    }
+
     let accountStatus: string;
     let accessToken: string;
     const findUser = await this.userRepository.findByEmail(email);
-    console.log("🚀 ~ file: auth.service.ts:36 ~ AuthService ~ signInWithMicrosoft ~ findUser:", findUser)
+    console.log(
+      '🚀 ~ file: auth.service.ts:36 ~ AuthService ~ signInWithMicrosoft ~ findUser:',
+      findUser,
+    );
     if (!findUser) {
       await this.userRepository.create({
         isVerified: false,
@@ -49,7 +59,37 @@ export class AuthService {
       accessToken = await this.signToken(findUser._id.toHexString(), email);
     }
 
-    return { accountStatus, accessToken };
+    return { accountStatus, accessToken, idToken: microsoftIdToken };
+  }
+
+  async verify(payload: VerifyUserDto): Promise<{
+    accountStatus: string,
+    accessToken: string,
+    verifiedUser: UserDocument
+  }> {
+    const { idToken } = payload;
+    const email = await this.validateAccessTokenMicrosoft(idToken);
+    if (!email) {
+      throw new UnauthorizedException('Microsoft ID token invalid');
+    }
+
+    if (!email.match(CommonConstant.NETCOMPANY_EMAIL_REGEX)) {
+      // throw new BadRequestException('Invalid Netcompany email'); // for production only
+    }
+
+    const verifiedUser = await this.userRepository.updateByEmail(
+      email,
+      payload,
+    );
+    const accessToken = await this.signToken(
+      verifiedUser._id.toHexString(),
+      email,
+    );
+    return {
+      accountStatus: verifiedUser.isVerified ? AccountStatus.VERIFIED : AccountStatus.UNVERIFIED,
+      accessToken,
+      verifiedUser,
+    };
   }
 
   async signToken(userId: string, email: string): Promise<string> {

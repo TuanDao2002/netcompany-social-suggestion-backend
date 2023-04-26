@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../schema/users.schema';
 import { Model } from 'mongoose';
-import { CreateUserDto } from "../dto/create-user.dto";
+import { CreateUserDto } from '../dto/create-user.dto';
+import { VerifyUserDto } from '../dto/verify-user.dto';
 
 @Injectable()
 export class UserRepository {
@@ -12,8 +13,36 @@ export class UserRepository {
     return this.userModel.findOne({ email }).exec();
   }
 
-  public async create(createUserDto: CreateUserDto) {
+  public async create(createUserDto: CreateUserDto): Promise<UserDocument> {
     const createdUser = new this.userModel(createUserDto);
     return createdUser.save();
+  }
+
+  public async updateByEmail(
+    email: string,
+    verifyUserDto: VerifyUserDto,
+    isVerified: boolean = true,
+  ): Promise<UserDocument> {
+    const {
+      username,
+      address,
+      imageUrl,
+      locationCategories,
+      searchDistance,
+      coordinates,
+    } = verifyUserDto;
+    return await this.userModel.findOneAndUpdate(
+      { email },
+      {
+        isVerified,
+        username,
+        address,
+        imageUrl: imageUrl ? imageUrl : "",
+        locationCategories,
+        searchDistance,
+        coordinates,
+      },
+      { new: true },
+    );
   }
 }

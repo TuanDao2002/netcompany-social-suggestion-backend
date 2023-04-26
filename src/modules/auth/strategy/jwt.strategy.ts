@@ -3,10 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { UserRepository } from "../../user/repository/user.repository";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly userRepository: UserRepository,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         JwtStrategy.extractJWTFromCookie,
@@ -24,11 +28,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: { sub: string; email: string }) {
-    // delete user.hash;
-    // attach the user object to request object
-    if (payload.sub === '1' && payload.email === 'S3877347@rmit.edu.vn') {
+    const findUser = await this.userRepository.findByEmail(payload.email);
+    if (findUser && findUser._id.toHexString() === payload.sub) {
       const user = payload;
       return user;
-    }
+    } else return payload;
+
+    return null;
   }
 }

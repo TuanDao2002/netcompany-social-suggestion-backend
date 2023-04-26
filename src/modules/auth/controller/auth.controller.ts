@@ -16,6 +16,9 @@ import { JwtGuard } from '../guard/jwt.guard';
 import { CurrentUser } from '../guard/user.decorator';
 import { AuthService } from '../service/auth.service';
 import { AccountStatus } from '../../../common/account-status.enum';
+import { CreateUserDto } from '../../user/dto/create-user.dto';
+import { VerifyUserDto } from '../../user/dto/verify-user.dto';
+import { UserDocument } from '../../user/schema/users.schema';
 
 @Controller('auth')
 export class AuthController {
@@ -28,24 +31,40 @@ export class AuthController {
   @Post('')
   async signIn(@Body() body: AuthDto, @Res() res: Response): Promise<void> {
     const { microsoftIdToken } = body;
-    const { accountStatus, accessToken } =
+    const { accountStatus, accessToken, idToken } =
       await this.authService.signInWithMicrosoft(microsoftIdToken);
 
     if (accountStatus === AccountStatus.UNVERIFIED) {
       res
         .status(HttpStatus.NOT_ACCEPTABLE)
-        .json({ msg: 'The account is not verified yet' });
+        .json({ msg: 'The account is not verified yet', idToken });
     } else {
       res.cookie('access_token', accessToken, {
         maxAge: CommonConstant.MAX_AGE,
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'dev' ? false : true,
         sameSite: 'none',
         path: '/',
       });
 
       res.json({ accessToken });
     }
+  }
+
+  @Post('verify')
+  async verify(@Body() body: VerifyUserDto, @Res() res: Response) {
+    const { accountStatus, accessToken, verifiedUser } =
+      await this.authService.verify(body);
+
+    res.cookie('access_token', accessToken, {
+      maxAge: CommonConstant.MAX_AGE,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'dev' ? false : true,
+      sameSite: 'none',
+      path: '/',
+    });
+
+    res.json({ accountStatus, accessToken, verifiedUser });
   }
 
   @UseGuards(JwtGuard)
@@ -58,7 +77,7 @@ export class AuthController {
     res.cookie('access_token', '', {
       maxAge: 0,
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'dev' ? false : true,
       sameSite: 'none',
       path: '/',
     });

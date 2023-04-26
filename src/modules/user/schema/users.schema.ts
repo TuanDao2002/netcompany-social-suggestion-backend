@@ -5,27 +5,30 @@ import { SearchDistance } from '../../../common/search-distance.enum';
 
 export type UserDocument = HydratedDocument<User>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, default: false })
   isVerified: boolean;
 
   @Prop({
     required: false,
+    trim: true,
     unique: true,
+    sparse: true, // only index this prop when it is not null
   })
   username: string;
 
   @Prop({
     required: true,
+    trim: true,
     unique: true,
   })
   email: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, trim: true })
   address: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, trim: true })
   imageUrl: string;
 
   @Prop({
@@ -58,4 +61,9 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-UserSchema.index({ username: 1, email: 1 }, { unique: true });
+UserSchema.index(
+  { username: 1, email: 1 },
+  {
+    unique: true,
+  },
+);
