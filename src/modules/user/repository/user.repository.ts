@@ -37,7 +37,7 @@ export class UserRepository {
         isVerified,
         username,
         address,
-        imageUrl: imageUrl ? imageUrl : "",
+        imageUrl,
         locationCategories,
         searchDistance,
         coordinates,

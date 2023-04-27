@@ -37,7 +37,7 @@ export class AuthController {
     if (accountStatus === AccountStatus.UNVERIFIED) {
       res
         .status(HttpStatus.NOT_ACCEPTABLE)
-        .json({ msg: 'The account is not verified yet', idToken });
+        .json({ msg: 'The account is not verified yet', idToken, username: user.username });
     } else {
       res.cookie('access_token', accessToken, {
         maxAge: CommonConstant.MAX_AGE,
@@ -67,13 +67,8 @@ export class AuthController {
     res.json({ accountStatus, accessToken, verifiedUser });
   }
 
-  @UseGuards(JwtGuard)
   @Delete('logout')
-  async logOut(@Res() res: Response, @CurrentUser() user: any) {
-    console.log(
-      '🚀 ~ file: auth.controller.ts:45 ~ AuthController ~ logOut ~ user:',
-      user,
-    );
+  async logOut(@Res() res: Response) {
     res.cookie('access_token', '', {
       maxAge: 0,
       httpOnly: true,
