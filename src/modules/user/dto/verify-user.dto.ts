@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
+  IsPositive,
   IsString,
   ValidateNested
 } from 'class-validator';
@@ -27,7 +28,7 @@ export class VerifyUserDto {
   idToken: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   username: string;
 
   @IsString()
@@ -46,6 +47,7 @@ export class VerifyUserDto {
 
   @IsNumber()
   @IsOptional()
+  @IsPositive()
   searchDistance: number;
 
   @IsObject()

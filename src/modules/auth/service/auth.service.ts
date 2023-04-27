@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import jwt from 'jsonwebtoken';
@@ -7,7 +7,7 @@ import { CommonConstant } from '../../../common/constant';
 import { UserRepository } from '../../user/repository/user.repository';
 import { AccountStatus } from '../../../common/account-status.enum';
 import { VerifyUserDto } from '../../user/dto/verify-user.dto';
-import { UserDocument } from "../../user/schema/users.schema";
+import { UserDocument } from '../../user/schema/users.schema';
 
 @Injectable()
 export class AuthService {
@@ -20,16 +20,18 @@ export class AuthService {
   private clientID = this.configService.get('AZURE_AD_CLIENT_ID');
 
   public async signInWithMicrosoft(microsoftIdToken: string): Promise<{
-    accountStatus: string,
-    accessToken: string,
-    idToken: string,
-    user: UserDocument
+    accountStatus: string;
+    accessToken: string;
+    idToken: string;
+    user: UserDocument;
   }> {
     if (!microsoftIdToken) {
       throw new UnauthorizedException('Microsoft ID token missing');
     }
 
-    const email = await this.validateAccessTokenMicrosoft(microsoftIdToken);
+    const { email, name } = await this.validateAccessTokenMicrosoft(
+      microsoftIdToken,
+    );
     if (!email) {
       throw new UnauthorizedException('Microsoft ID token invalid');
     }
@@ -40,36 +42,39 @@ export class AuthService {
 
     let accountStatus: string;
     let accessToken: string;
-    const findUser = await this.userRepository.findByEmail(email);
-    console.log(
-      '🚀 ~ file: auth.service.ts:36 ~ AuthService ~ signInWithMicrosoft ~ findUser:',
-      findUser,
-    );
-    if (!findUser) {
-      await this.userRepository.create({
+    let user: UserDocument;
+    user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      user = await this.userRepository.create({
         isVerified: false,
+        username: name,
         email,
       });
     }
 
-    if (!findUser || !findUser.isVerified) {
+    if (!user || !user.isVerified) {
       accountStatus = AccountStatus.UNVERIFIED;
       accessToken = '';
     } else {
       accountStatus = AccountStatus.VERIFIED;
-      accessToken = await this.signToken(findUser._id.toHexString(), email);
+      accessToken = await this.signToken(user._id.toHexString(), email);
     }
 
-    return { accountStatus, accessToken, idToken: microsoftIdToken, user: findUser };
+    return {
+      accountStatus,
+      accessToken,
+      idToken: microsoftIdToken,
+      user,
+    };
   }
 
   async verify(payload: VerifyUserDto): Promise<{
-    accountStatus: string,
-    accessToken: string,
-    verifiedUser: UserDocument
+    accountStatus: string;
+    accessToken: string;
+    verifiedUser: UserDocument;
   }> {
     const { idToken } = payload;
-    const email = await this.validateAccessTokenMicrosoft(idToken);
+    const { email } = await this.validateAccessTokenMicrosoft(idToken);
     if (!email) {
       throw new UnauthorizedException('Microsoft ID token invalid');
     }
@@ -82,12 +87,19 @@ export class AuthService {
       email,
       payload,
     );
+
+    if (!verifiedUser) {
+      throw new BadRequestException("This email was not used to sign in yet")
+    }
+
     const accessToken = await this.signToken(
       verifiedUser._id.toHexString(),
       email,
     );
     return {
-      accountStatus: verifiedUser.isVerified ? AccountStatus.VERIFIED : AccountStatus.UNVERIFIED,
+      accountStatus: verifiedUser.isVerified
+        ? AccountStatus.VERIFIED
+        : AccountStatus.UNVERIFIED,
       accessToken,
       verifiedUser,
     };
@@ -109,9 +121,7 @@ export class AuthService {
     return token;
   }
 
-  private async validateAccessTokenMicrosoft(
-    microsoftIdToken: string,
-  ): Promise<string> {
+  private async validateAccessTokenMicrosoft(microsoftIdToken: string) {
     try {
       const decodedToken = jwt.decode(microsoftIdToken, { complete: true });
 
@@ -122,11 +132,15 @@ export class AuthService {
 
       // Verify the claims
       const claims = decodedToken.payload as jwt.JwtPayload;
-      if (claims.aud !== this.clientID && claims.preferred_username) {
+      if (
+        claims.aud !== this.clientID &&
+        claims.preferred_username &&
+        claims.name
+      ) {
         throw new Error('Invalid claims');
       }
 
-      return claims.preferred_username;
+      return { email: claims.preferred_username, name: claims.name };
     } catch (err) {
       console.error(err);
       return null;
