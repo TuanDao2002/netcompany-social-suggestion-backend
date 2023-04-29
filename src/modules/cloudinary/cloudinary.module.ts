@@ -11,7 +11,7 @@ import { join } from 'path';
     ConfigModule,
     MulterModule.register({
       storage: diskStorage({
-        destination: join(__dirname, '..', 'uploads'),
+        destination: '/tmp',
         filename: (req, file, cb) => {
           const filename: string = file.originalname.replace(/\s+/g, '-');
           cb(null, `${filename}`);
