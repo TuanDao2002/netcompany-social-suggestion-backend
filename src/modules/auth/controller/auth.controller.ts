@@ -5,20 +5,15 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Res,
-  UseGuards,
+  Res
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { CommonConstant } from '../../../common/constant';
-import { AuthDto } from '../dto/auth.dto';
-import { JwtGuard } from '../guard/jwt.guard';
-import { CurrentUser } from '../guard/user.decorator';
-import { AuthService } from '../service/auth.service';
 import { AccountStatus } from '../../../common/account-status.enum';
-import { CreateUserDto } from '../../user/dto/create-user.dto';
+import { CommonConstant } from '../../../common/constant';
 import { VerifyUserDto } from '../../user/dto/verify-user.dto';
-import { UserDocument } from '../../user/schema/users.schema';
+import { AuthDto } from '../dto/auth.dto';
+import { AuthService } from '../service/auth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -35,46 +30,34 @@ export class AuthController {
       await this.authService.signInWithMicrosoft(microsoftIdToken);
 
     if (accountStatus === AccountStatus.UNVERIFIED) {
-      res
-        .status(HttpStatus.NOT_ACCEPTABLE)
-        .json({ msg: 'The account is not verified yet', idToken, username: user.username });
-    } else {
-      res.cookie('access_token', accessToken, {
-        maxAge: CommonConstant.MAX_AGE,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'dev' ? false : true,
-        sameSite: 'none',
-        path: '/',
+      res.status(HttpStatus.NOT_ACCEPTABLE).json({
+        msg: 'The account is not verified yet',
+        idToken,
+        username: user.username,
       });
-
+    } else {
+      res.cookie('access_token', accessToken, CommonConstant.COOKIE_OPTIONS);
       res.json({ accessToken, user });
     }
   }
 
   @Post('verify')
-  async verify(@Body() body: VerifyUserDto, @Res() res: Response): Promise<void> {
+  async verify(
+    @Body() body: VerifyUserDto,
+    @Res() res: Response,
+  ): Promise<void> {
     const { accountStatus, accessToken, verifiedUser } =
       await this.authService.verify(body);
 
-    res.cookie('access_token', accessToken, {
-      maxAge: CommonConstant.MAX_AGE,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'dev' ? false : true,
-      sameSite: 'none',
-      path: '/',
-    });
-
+    res.cookie('access_token', accessToken, CommonConstant.COOKIE_OPTIONS);
     res.json({ accountStatus, accessToken, verifiedUser });
   }
 
   @Delete('logout')
   async logOut(@Res() res: Response) {
     res.cookie('access_token', '', {
+      ...CommonConstant.COOKIE_OPTIONS,
       maxAge: 0,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'dev' ? false : true,
-      sameSite: 'none',
-      path: '/',
     });
     res.json({ msg: 'Logout' });
   }
