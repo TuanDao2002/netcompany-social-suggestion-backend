@@ -137,13 +137,13 @@ export class AuthService {
         claims.preferred_username &&
         claims.name
       ) {
-        throw new Error('Invalid claims');
+        throw new UnauthorizedException('Invalid claims');
       }
 
       return { email: claims.preferred_username, name: claims.name };
     } catch (err) {
       console.error(err);
-      return null;
+      throw new UnauthorizedException(err.message) ;
     }
   }
 
@@ -158,7 +158,7 @@ export class AuthService {
     );
 
     if (!signingKey) {
-      throw new Error('Signing key not found');
+      throw new UnauthorizedException('Signing key not found');
     }
 
     const publicKey = this.convertCertToPEM(signingKey.x5c[0]);
