@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { UserRepository } from "../../user/repository/user.repository";
+import { UserRepository } from '../../user/repository/user.repository';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -30,8 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: { sub: string; email: string }) {
     const findUser = await this.userRepository.findByEmail(payload.email);
     if (findUser && findUser._id.toHexString() === payload.sub) {
-      const user = payload;
-      return user;
+      return findUser;
     }
 
     return null;

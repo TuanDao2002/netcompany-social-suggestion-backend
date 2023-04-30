@@ -19,7 +19,6 @@ import { AuthService } from '../service/auth.service';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
   ) {}
 
   @HttpCode(HttpStatus.OK)
