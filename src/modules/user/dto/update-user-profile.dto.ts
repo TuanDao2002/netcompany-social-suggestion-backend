@@ -1,33 +1,17 @@
-import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsEnum,
-  IsNotEmpty,
   IsNumber,
-  IsObject,
   IsPositive,
   IsString,
   NotEquals,
   ValidateIf,
-  ValidateNested
 } from 'class-validator';
 import { LocationCategory } from '../../../common/location-category.enum';
 
-export class Coordinates {
-  @IsNumber()
-  latitude: number;
-
-  @IsNumber()
-  longitude: number;
-}
-
-export class VerifyUserDto {
-  @IsString()
-  @IsNotEmpty()
-  idToken: string;
-
+export class UpdateUserProfileDto {
   @IsString()
   @NotEquals(null)
   @ValidateIf((object, value) => value !== undefined)
@@ -39,6 +23,8 @@ export class VerifyUserDto {
   imageUrl: string;
 
   @IsArray()
+  @NotEquals(null)
+  @ValidateIf((object, value) => value !== undefined)
   @IsEnum(LocationCategory, { each: true })
   @ArrayMinSize(0)
   @ArrayMaxSize(Object.keys(LocationCategory).length)
@@ -46,12 +32,7 @@ export class VerifyUserDto {
 
   @IsNumber()
   @NotEquals(null)
-  @ValidateIf((object, value) => value !== undefined)  
+  @ValidateIf((object, value) => value !== undefined)
   @IsPositive()
   searchDistance: number;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => Coordinates)
-  coordinates: Coordinates;
 }
