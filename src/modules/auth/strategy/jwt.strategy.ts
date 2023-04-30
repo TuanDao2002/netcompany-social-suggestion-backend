@@ -28,8 +28,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: { sub: string; email: string }) {
-    const findUser = await this.userRepository.findByEmail(payload.email);
-    if (findUser && findUser._id.toHexString() === payload.sub) {
+    const findUser = await this.userRepository.findById(payload.sub);
+    if (findUser && findUser.email === payload.email) {
       return findUser;
     }
 

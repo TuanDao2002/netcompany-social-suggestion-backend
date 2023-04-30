@@ -25,9 +25,6 @@ export class User {
   })
   email: string;
 
-  @Prop({ required: false, trim: true })
-  address: string;
-
   @Prop({ required: false, trim: true, default: "" })
   imageUrl: string;
 

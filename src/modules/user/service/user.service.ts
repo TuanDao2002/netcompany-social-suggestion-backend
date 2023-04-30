@@ -1,8 +1,11 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable
+} from '@nestjs/common';
+import { UpdateUserLocationDto } from "../dto/update-user-location.dto";
+import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { UserRepository } from '../repository/user.repository';
 import { UserDocument } from '../schema/users.schema';
-import mongoose from 'mongoose';
-import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -13,6 +16,9 @@ export class UserService {
     user: UserDocument,
   ): Promise<Partial<UserDocument>> {
     const findUser = await this.userRepository.findById(id);
+    if (!findUser) {
+      throw new BadRequestException('This user does not exist');
+    }
     const { username, imageUrl } = findUser;
 
     if (findUser._id.toHexString() !== user._id.toHexString()) {
@@ -22,22 +28,34 @@ export class UserService {
     return findUser;
   }
 
-  public async updateUser(
-    id: string,
-    updateData: UpdateUserDto,
+  public async updateUserProfile(
+    updateData: UpdateUserProfileDto,
     user: UserDocument,
   ): Promise<UserDocument> {
-    if (user._id.toHexString() !== id) {
-      throw new UnauthorizedException("You are not allow to edit this profile");
-    }
-
     if (updateData.username) {
-        const duplicateUsername = await this.userRepository.findByUsername(updateData.username)
-        if (duplicateUsername) {
-            throw new BadRequestException("The username is duplicated with another account")
-        }
+      const duplicateUsername = await this.userRepository.findByUsername(
+        updateData.username,
+      );
+      if (
+        duplicateUsername &&
+        duplicateUsername._id.toHexString() !== user._id.toHexString()
+      ) {
+        throw new BadRequestException(
+          'The username is duplicated with another account',
+        );
+      }
     }
 
-    return await this.userRepository.updateById(id, updateData);
+    return await this.userRepository.updateById(
+      user._id.toHexString(),
+      updateData,
+    );
+  }
+
+  public async updateUserLocation(
+    updateCoordinate: UpdateUserLocationDto,
+    user: UserDocument,
+  ): Promise<UserDocument> {
+    return await this.userRepository.updateById(user._id.toHexString(), updateCoordinate)
   }
 }

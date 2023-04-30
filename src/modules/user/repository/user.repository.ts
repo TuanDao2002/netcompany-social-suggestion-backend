@@ -4,7 +4,8 @@ import { User, UserDocument } from '../schema/users.schema';
 import { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { VerifyUserDto } from '../dto/verify-user.dto';
-import { UpdateUserDto } from '../dto/update-user.dto';
+import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
+import { UpdateUserLocationDto } from "../dto/update-user-location.dto";
 
 @Injectable()
 export class UserRepository {
@@ -44,7 +45,7 @@ export class UserRepository {
 
   public async updateById(
     id: string,
-    updateData: UpdateUserDto,
+    updateData: UpdateUserProfileDto | UpdateUserLocationDto,
   ): Promise<UserDocument> {
     return await this.userModel.findByIdAndUpdate(id, updateData, {
       new: true,
