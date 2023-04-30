@@ -32,7 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (findUser && findUser._id.toHexString() === payload.sub) {
       const user = payload;
       return user;
-    } else return payload;
+    }
 
     return null;
   }

@@ -13,6 +13,10 @@ export class UserRepository {
     return this.userModel.findOne({ email }).exec();
   }
 
+  public async findByUsername(username: string): Promise<UserDocument> {
+    return this.userModel.findOne({ username }).exec();
+  }
+
   public async create(createUserDto: CreateUserDto): Promise<UserDocument> {
     const createdUser = new this.userModel(createUserDto);
     return createdUser.save();
