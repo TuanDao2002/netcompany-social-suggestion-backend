@@ -23,7 +23,7 @@ export class AuthController {
   ) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('')
+  @Post('signin')
   async signIn(@Body() body: AuthDto, @Res() res: Response): Promise<void> {
     const { microsoftIdToken } = body;
     const { accountStatus, accessToken, idToken, user } =
@@ -41,6 +41,7 @@ export class AuthController {
     }
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('verify')
   async verify(
     @Body() body: VerifyUserDto,
@@ -53,6 +54,7 @@ export class AuthController {
     res.json({ accountStatus, accessToken, verifiedUser });
   }
 
+  @HttpCode(HttpStatus.OK)
   @Delete('logout')
   async logOut(@Res() res: Response) {
     res.cookie('access_token', '', {
