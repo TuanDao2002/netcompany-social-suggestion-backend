@@ -7,7 +7,6 @@ import {
   Post,
   Res
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { AccountStatus } from '../../../common/account-status.enum';
 import { CommonConstant } from '../../../common/constant';
