@@ -35,7 +35,7 @@ export class User {
   })
   locationCategories: [LocationCategory];
 
-  @Prop({ required: false, default: SearchDistance.DIS_5_KM })
+  @Prop({ required: false, default: SearchDistance.MIN_DISTANCE })
   searchDistance: number;
 
   @Prop({

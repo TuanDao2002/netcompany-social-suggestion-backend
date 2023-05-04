@@ -1,3 +1,4 @@
+import { LocationModule } from './modules/location/location.module';
 import { ImageModule } from './modules/cloudinary/cloudinary.module';
 import { UserModule } from './modules/user/user.module';
 import { Module } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { DatabaseModule } from './database/database.module';
     ImageModule,
     UserModule,
     AuthModule,
+    LocationModule,
   ],
   controllers: [],
   providers: [AppService],

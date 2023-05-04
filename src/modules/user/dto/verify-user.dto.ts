@@ -7,13 +7,15 @@ import {
   IsNotEmpty,
   IsNumber,
   IsObject,
-  IsPositive,
   IsString,
+  Max,
+  Min,
   NotEquals,
   ValidateIf,
   ValidateNested
 } from 'class-validator';
 import { LocationCategory } from '../../../common/location-category.enum';
+import { SearchDistance } from "../../../common/search-distance.enum";
 
 export class Coordinates {
   @IsNumber()
@@ -47,7 +49,8 @@ export class VerifyUserDto {
   @IsNumber()
   @NotEquals(null)
   @ValidateIf((object, value) => value !== undefined)  
-  @IsPositive()
+  @Min(SearchDistance.MIN_DISTANCE)
+  @Max(SearchDistance.MAX_DISTANCE)
   searchDistance: number;
 
   @IsObject()
