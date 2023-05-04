@@ -2,6 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { Currency } from '../../../common/currency.enum';
+import { WeekDay } from '../../../common/weekday.enum';
+import { CommonConstant } from '../../../common/constant';
 
 export type LocationDocument = HydratedDocument<Location>;
 
@@ -67,6 +69,31 @@ export class Location {
   averagePrice: {
     value: number;
     currency: string;
+  };
+
+  @Prop({
+    type: [
+      {
+        day: {
+          type: WeekDay,
+          min: WeekDay.MONDAY,
+          max: WeekDay.SUNDAY,
+        },
+        openTime: {
+          type: String,
+          match: CommonConstant.TimeRegex,
+        },
+        closeTime: {
+          type: String,
+          match: CommonConstant.TimeRegex,
+        },
+      },
+    ],
+  })
+  periods: {
+    day: WeekDay;
+    openTime: string;
+    closeTime: string;
   };
 
   @Prop({ required: true, trim: true })

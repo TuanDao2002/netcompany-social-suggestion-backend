@@ -12,4 +12,6 @@ export class CommonConstant {
     sameSite: "strict",
     path: '/',
   };
+
+  public static readonly TimeRegex = /^\d{4}$/;
 }
