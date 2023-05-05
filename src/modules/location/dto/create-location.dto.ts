@@ -3,6 +3,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsObject,
   IsString,
@@ -11,18 +12,30 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Coordinates } from '../../user/dto/verify-user.dto';
 import { Type } from 'class-transformer';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { WeekDay } from '../../../common/weekday.enum';
 import { CommonConstant } from '../../../common/constant';
+import { Currency } from '../../../common/currency.enum';
+
+export class Location {
+  @IsEnum(['Point'])
+  type: ['Point'];
+
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @ArrayMaxSize(2)
+  @ArrayMinSize(2)
+  coordinates: [number, number];
+}
 
 export class AveragePrice {
   @IsNumber()
+  @Min(0)
   value: number;
 
-  @IsString()
-  currency: string;
+  @IsEnum(Currency)
+  currency: Currency;
 }
 
 export class Period {
@@ -42,21 +55,28 @@ export class Period {
 
 export class CreateLocationDto {
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsString()
+  @IsNotEmpty()
   address: string;
 
   @IsObject()
   @ValidateNested()
-  @Type(() => Coordinates)
-  coordinates: Coordinates;
+  @Type(() => Location)
+  location: Location;
 
-  @IsArray()
-  @IsEnum(LocationCategory, { each: true })
-  @ArrayMinSize(0)
-  @ArrayMaxSize(Object.keys(LocationCategory).length)
-  locationCategories: [LocationCategory];
+  @IsString()
+  @IsNotEmpty()
+  description: string;
+
+  @IsString()
+  @IsNotEmpty()
+  imageUrl: string;
+
+  @IsEnum(LocationCategory)
+  locationCategory: LocationCategory;
 
   @IsObject()
   @ValidateNested()

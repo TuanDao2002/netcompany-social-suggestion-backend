@@ -23,20 +23,18 @@ export class Location {
 
   @Prop({
     type: {
-      latitude: {
-        type: Number,
-        default: 0,
-      },
-      longitude: {
-        type: Number,
-        default: 0,
-      },
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
     },
-    required: true,
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
   })
-  coordinates: {
-    latitude: number;
-    longitude: number;
+  location: {
+    type: string;
+    coordinates: [number];
   };
 
   @Prop({
@@ -50,7 +48,7 @@ export class Location {
     enum: LocationCategory,
     required: true,
   })
-  locationCategories: [LocationCategory];
+  locationCategory: LocationCategory;
 
   @Prop({
     type: {
@@ -68,16 +66,15 @@ export class Location {
   })
   averagePrice: {
     value: number;
-    currency: string;
+    currency: Currency;
   };
 
   @Prop({
     type: [
       {
         day: {
-          type: WeekDay,
-          min: WeekDay.MONDAY,
-          max: WeekDay.SUNDAY,
+          type: Number,
+          enum: WeekDay,
         },
         openTime: {
           type: String,
@@ -98,6 +95,16 @@ export class Location {
 
   @Prop({ required: true, trim: true })
   imageUrl: string;
+
+  @Prop({ required: true, default: 0 })
+  heartCount: number;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
+LocationSchema.index({ name: 1 });
+LocationSchema.index({ address: 1 });
+LocationSchema.index({ locationCategory: 1 });
+LocationSchema.index({ periods: 1 });
+LocationSchema.index({ heartCount: 1 });
+LocationSchema.index({ createdAt: 1 });
+LocationSchema.index({ location: '2dsphere' });
