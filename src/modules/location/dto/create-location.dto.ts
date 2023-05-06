@@ -71,9 +71,10 @@ export class CreateLocationDto {
   @IsNotEmpty()
   description: string;
 
-  @IsString()
-  @IsNotEmpty()
-  imageUrl: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  imageUrls: [string];
 
   @IsEnum(LocationCategory)
   locationCategory: LocationCategory;
