@@ -1,7 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, SchemaTypes } from 'mongoose';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { Currency } from '../../../common/currency.enum';
+import { WeekDay } from '../../../common/weekday.enum';
+import { CommonConstant } from '../../../common/constant';
+import { User } from '../../user/schema/users.schema';
 
 export type LocationDocument = HydratedDocument<Location>;
 
@@ -21,20 +24,18 @@ export class Location {
 
   @Prop({
     type: {
-      latitude: {
-        type: Number,
-        default: 0,
-      },
-      longitude: {
-        type: Number,
-        default: 0,
-      },
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
     },
-    required: true,
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
   })
-  coordinates: {
-    latitude: number;
-    longitude: number;
+  location: {
+    type: string;
+    coordinates: [number];
   };
 
   @Prop({
@@ -48,7 +49,7 @@ export class Location {
     enum: LocationCategory,
     required: true,
   })
-  locationCategories: [LocationCategory];
+  locationCategory: LocationCategory;
 
   @Prop({
     type: {
@@ -66,11 +67,74 @@ export class Location {
   })
   averagePrice: {
     value: number;
-    currency: string;
+    currency: Currency;
+  };
+
+  @Prop({
+    type: [
+      {
+        day: {
+          type: Number,
+          enum: WeekDay,
+        },
+        openTime: {
+          type: String,
+          match: CommonConstant.TimeRegex,
+        },
+        closeTime: {
+          type: String,
+          match: CommonConstant.TimeRegex,
+        },
+      },
+    ],
+  })
+  periods: {
+    day: WeekDay;
+    openTime: string;
+    closeTime: string;
   };
 
   @Prop({ required: true, trim: true })
-  imageUrl: string;
+  imageUrls: [string];
+
+  @Prop({ required: true, default: 0 })
+  heartCount: number;
+
+  @Prop({
+    type: {
+      userId: {
+        type: SchemaTypes.ObjectId,
+        ref: User.name,
+        required: true,
+      },
+      username: {
+        type: String,
+        required: true,
+      },
+      email: {
+        type: String,
+        requried: true,
+      },
+      imageUrl: {
+        type: String,
+        required: true,
+      },
+    },
+  })
+  createdUser: {
+    userId: string;
+    username: string;
+    email: string;
+    imageUrl: string;
+  };
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
+LocationSchema.index({ name: 1 });
+LocationSchema.index({ address: 1 });
+LocationSchema.index({ locationCategory: 1 });
+LocationSchema.index({ periods: 1 });
+LocationSchema.index({ heartCount: 1 });
+LocationSchema.index({ createdAt: 1 });
+LocationSchema.index({ location: '2dsphere' });
+LocationSchema.index({ 'createdUser.userId': 1 });
