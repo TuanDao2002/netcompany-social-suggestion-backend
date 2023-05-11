@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { VerifyUserDto } from '../dto/verify-user.dto';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
-import { UpdateUserLocationDto } from "../dto/update-user-location.dto";
+import { UpdateUserLocationDto } from '../dto/update-user-location.dto';
 
 @Injectable()
 export class UserRepository {
@@ -16,7 +16,7 @@ export class UserRepository {
   }
 
   public async findByUsername(username: string): Promise<UserDocument> {
-    return this.userModel.findOne({ username }).exec();
+    return this.userModel.findOne({ username, isVerified: true }).exec();
   }
 
   public async findById(id: string): Promise<UserDocument> {
