@@ -28,13 +28,21 @@ export class LocationRepository {
     return createdLocation.save();
   }
 
-  public async isDuplicate(name: string, address: string): Promise<boolean> {
+  public async findDuplicate(
+    name: string,
+    placeId: string,
+  ): Promise<{
+    name: string;
+    address: string;
+  }> {
     const duplicateLocation = await this.locationModel.findOne({
       name,
-      address,
+      placeId,
     });
 
-    return duplicateLocation ? true : false;
+    return duplicateLocation
+      ? { name: duplicateLocation.name, address: duplicateLocation.address }
+      : null;
   }
 
   public async findCreatedLocations(

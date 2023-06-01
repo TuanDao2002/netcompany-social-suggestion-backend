@@ -22,18 +22,18 @@ export class LocationService {
     }
 
     // format address, name and description
-    locationData.address = Utils.removeZipcode(locationData.address);
+    locationData.address = Utils.removeSpace(locationData.address);
     locationData.name = Utils.removeSpace(locationData.name);
     locationData.description = locationData.description.trim();
 
-    const { name, address } = locationData;
-    const isDuplicate = await this.locationRepository.isDuplicate(
+    const { name, placeId } = locationData;
+    const findDuplicate = await this.locationRepository.findDuplicate(
       name,
-      address,
+      placeId,
     );
-    if (isDuplicate) {
+    if (findDuplicate) {
       throw new BadRequestException(
-        `Location with name: '${name}' and address: '${address}' is already registered`,
+        `Location with name: '${findDuplicate.name}' and address: '${findDuplicate.address}' is already registered`,
       );
     }
 
