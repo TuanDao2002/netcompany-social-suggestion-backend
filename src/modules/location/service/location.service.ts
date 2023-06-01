@@ -4,13 +4,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { LocationRepository } from '../repository/location.repository';
-import {
-  CreateLocationDto,
-  Period,
-  PricePerPerson,
-} from '../dto/create-location.dto';
+import { CreateLocationDto } from '../dto/create-location.dto';
 import { LocationDocument } from '../schema/locations.schema';
 import { UserDocument } from '../../user/schema/users.schema';
+import { Utils } from '../../../common/utils';
 
 @Injectable()
 export class LocationService {
@@ -24,31 +21,20 @@ export class LocationService {
       throw new UnauthorizedException('You have to sign in to create location');
     }
 
-    const { name, address, weekday, weekend, pricePerPerson } = locationData;
-    if (!this.validatePeriod(weekday)) {
-      throw new BadRequestException(
-        'The opening time must be before the closing time on weekday',
-      );
-    }
+    // format address, name and description
+    locationData.address = Utils.removeZipcode(locationData.address);
+    locationData.name = Utils.removeSpace(locationData.name);
+    locationData.description = locationData.description.trim();
 
-    if (!this.validatePeriod(weekend)) {
-      throw new BadRequestException(
-        'The opening time must be before the closing time on weekend',
-      );
-    }
-
-    if (pricePerPerson && !this.validatePriceRange(pricePerPerson)) {
-      throw new BadRequestException(
-        'The min price must be smaller than max price',
-      );
-    }
-
+    const { name, address } = locationData;
     const isDuplicate = await this.locationRepository.isDuplicate(
       name,
-      this.formatAddress(address),
+      address,
     );
     if (isDuplicate) {
-      throw new BadRequestException('This location is already registered');
+      throw new BadRequestException(
+        `Location with name: '${name}' and address: '${address}' is already registered`,
+      );
     }
 
     return await this.locationRepository.createLocation(locationData, user);
@@ -70,25 +56,5 @@ export class LocationService {
       queryObject,
       next_cursor,
     );
-  }
-
-  private validatePeriod(period: Period) {
-    return period.openTime < period.closeTime;
-  }
-
-  private validatePriceRange(priceRange: PricePerPerson) {
-    return priceRange.min < priceRange.max;
-  }
-
-  private formatAddress(address: string) {
-    let arr = address.split(','); // split the address into parts
-
-    // remove zip code
-    arr[arr.length - 2] = arr[arr.length - 2]
-      .split(' ')
-      .slice(0, arr.length - 2)
-      .join(' ');
-
-    return arr.join(','); // join the parts back together
   }
 }

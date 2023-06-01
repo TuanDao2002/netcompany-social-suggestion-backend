@@ -16,6 +16,11 @@ import { Type } from 'class-transformer';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { CommonConstant } from '../../../common/constant';
 import { Currency } from '../../../common/currency.enum';
+import {
+  IsNotBlank,
+  IsValidPeriod,
+  IsValidPriceRange,
+} from '../../../common/validator';
 
 export class Location {
   @IsEnum(['Point'])
@@ -54,10 +59,12 @@ export class Period {
 export class CreateLocationDto {
   @IsString()
   @IsNotEmpty()
+  @IsNotBlank({ message: 'name must not contain only whitespaces' })
   name: string;
 
   @IsString()
   @IsNotEmpty()
+  @IsNotBlank({ message: 'address must not contain only whitespaces' })
   address: string;
 
   @IsObject()
@@ -67,6 +74,7 @@ export class CreateLocationDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsNotBlank({ message: 'description must not contain only whitespaces' })
   description: string;
 
   @IsArray()
@@ -81,15 +89,24 @@ export class CreateLocationDto {
   @IsObject()
   @ValidateNested()
   @Type(() => PricePerPerson)
+  @IsValidPriceRange({
+    message: 'The min price must be smaller than max price',
+  })
   pricePerPerson: PricePerPerson;
 
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
+  @IsValidPeriod({
+    message: 'The opening time must be before the closing time on weekday',
+  })
   weekday: Period;
 
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
+  @IsValidPeriod({
+    message: 'The opening time must be before the closing time on weekend',
+  })
   weekend: Period;
 }
