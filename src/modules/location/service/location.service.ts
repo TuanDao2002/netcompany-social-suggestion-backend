@@ -4,7 +4,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { LocationRepository } from '../repository/location.repository';
-import { CreateLocationDto, Period } from '../dto/create-location.dto';
+import {
+  CreateLocationDto,
+  Period,
+  PricePerPerson,
+} from '../dto/create-location.dto';
 import { LocationDocument } from '../schema/locations.schema';
 import { UserDocument } from '../../user/schema/users.schema';
 
@@ -19,18 +23,32 @@ export class LocationService {
     if (!user) {
       throw new UnauthorizedException('You have to sign in to create location');
     }
-    
-    const { name, address, periods } = locationData;
-    if (!this.validatePeriods(periods)) {
-      throw new BadRequestException('Open time must be before close time');
+
+    const { name, address, weekday, weekend, pricePerPerson } = locationData;
+    if (!this.validatePeriod(weekday)) {
+      throw new BadRequestException(
+        'The opening time must be before the closing time on weekday',
+      );
+    }
+
+    if (!this.validatePeriod(weekend)) {
+      throw new BadRequestException(
+        'The opening time must be before the closing time on weekend',
+      );
+    }
+
+    if (pricePerPerson && !this.validatePriceRange(pricePerPerson)) {
+      throw new BadRequestException(
+        'The min price must be smaller than max price',
+      );
     }
 
     const isDuplicate = await this.locationRepository.isDuplicate(
       name,
-      address,
+      this.formatAddress(address),
     );
     if (isDuplicate) {
-      throw new BadRequestException('This location is already created');
+      throw new BadRequestException('This location is already registered');
     }
 
     return await this.locationRepository.createLocation(locationData, user);
@@ -54,17 +72,23 @@ export class LocationService {
     );
   }
 
-  private validatePeriods(periods: [Period]): boolean {
-    for (let period of periods) {
-      if (!this.validatePeriod(period)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   private validatePeriod(period: Period) {
     return period.openTime < period.closeTime;
+  }
+
+  private validatePriceRange(priceRange: PricePerPerson) {
+    return priceRange.min < priceRange.max;
+  }
+
+  private formatAddress(address: string) {
+    let arr = address.split(','); // split the address into parts
+
+    // remove zip code
+    arr[arr.length - 2] = arr[arr.length - 2]
+      .split(' ')
+      .slice(0, arr.length - 2)
+      .join(' ');
+
+    return arr.join(','); // join the parts back together
   }
 }

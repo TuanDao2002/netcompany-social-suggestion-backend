@@ -6,15 +6,14 @@ import {
   IsNotEmpty,
   IsNumber,
   IsObject,
+  IsOptional,
   IsString,
   Matches,
-  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LocationCategory } from '../../../common/location-category.enum';
-import { WeekDay } from '../../../common/weekday.enum';
 import { CommonConstant } from '../../../common/constant';
 import { Currency } from '../../../common/currency.enum';
 
@@ -29,21 +28,20 @@ export class Location {
   coordinates: [number, number];
 }
 
-export class AveragePrice {
+export class PricePerPerson {
   @IsNumber()
   @Min(0)
-  value: number;
+  min: number;
+
+  @IsNumber()
+  @Min(0)
+  max: number;
 
   @IsEnum(Currency)
   currency: Currency;
 }
 
 export class Period {
-  @IsEnum(WeekDay)
-  @Min(WeekDay.MONDAY)
-  @Max(WeekDay.SUNDAY)
-  day: WeekDay;
-
   @IsString()
   @Matches(CommonConstant.TimeRegex)
   openTime: string;
@@ -79,15 +77,19 @@ export class CreateLocationDto {
   @IsEnum(LocationCategory)
   locationCategory: LocationCategory;
 
+  @IsOptional()
   @IsObject()
   @ValidateNested()
-  @Type(() => AveragePrice)
-  averagePrice: AveragePrice;
+  @Type(() => PricePerPerson)
+  pricePerPerson: PricePerPerson;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @ArrayMinSize(0)
-  @ArrayMaxSize(Object.keys(WeekDay).length)
+  @IsObject()
+  @ValidateNested()
   @Type(() => Period)
-  periods: [Period];
+  weekday: Period;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Period)
+  weekend: Period;
 }
