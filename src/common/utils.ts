@@ -1,3 +1,4 @@
+import { isNumberString } from "class-validator";
 import {
   Period,
   PricePerPerson,
@@ -21,7 +22,7 @@ export class Utils {
     if (city && city.includes(' ')) {
       let partsOfCity = city.split(' ').map((part) => this.removeSpace(part));
 
-      if (partsOfCity.length > 2) {
+      if (isNumberString(partsOfCity[partsOfCity.length - 1])) {
         arr[arr.length - 2] = partsOfCity.slice(0, -1).join(' ');
       }
     }
