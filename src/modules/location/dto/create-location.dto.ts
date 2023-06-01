@@ -59,6 +59,11 @@ export class Period {
 export class CreateLocationDto {
   @IsString()
   @IsNotEmpty()
+  @IsNotBlank({ message: 'placeId must not contain only whitespaces' })
+  placeId: string;
+
+  @IsString()
+  @IsNotEmpty()
   @IsNotBlank({ message: 'name must not contain only whitespaces' })
   name: string;
 

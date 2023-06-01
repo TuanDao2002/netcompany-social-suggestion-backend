@@ -13,6 +13,12 @@ export class Location {
     required: true,
     trim: true,
   })
+  placeId: string;
+
+  @Prop({
+    required: true,
+    trim: true,
+  })
   name: string;
 
   @Prop({
@@ -146,6 +152,7 @@ export class Location {
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
+LocationSchema.index({ placeId: 1 });
 LocationSchema.index({ name: 1 });
 LocationSchema.index({ address: 1 });
 LocationSchema.index({ locationCategory: 1 });
