@@ -6,17 +6,21 @@ import {
   IsNotEmpty,
   IsNumber,
   IsObject,
+  IsOptional,
   IsString,
   Matches,
-  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LocationCategory } from '../../../common/location-category.enum';
-import { WeekDay } from '../../../common/weekday.enum';
 import { CommonConstant } from '../../../common/constant';
 import { Currency } from '../../../common/currency.enum';
+import {
+  IsNotBlank,
+  IsValidPeriod,
+  IsValidPriceRange,
+} from '../../../common/validator';
 
 export class Location {
   @IsEnum(['Point'])
@@ -29,21 +33,20 @@ export class Location {
   coordinates: [number, number];
 }
 
-export class AveragePrice {
+export class PricePerPerson {
   @IsNumber()
   @Min(0)
-  value: number;
+  min: number;
+
+  @IsNumber()
+  @Min(0)
+  max: number;
 
   @IsEnum(Currency)
   currency: Currency;
 }
 
 export class Period {
-  @IsEnum(WeekDay)
-  @Min(WeekDay.MONDAY)
-  @Max(WeekDay.SUNDAY)
-  day: WeekDay;
-
   @IsString()
   @Matches(CommonConstant.TimeRegex)
   openTime: string;
@@ -56,10 +59,12 @@ export class Period {
 export class CreateLocationDto {
   @IsString()
   @IsNotEmpty()
+  @IsNotBlank({ message: 'name must not contain only whitespaces' })
   name: string;
 
   @IsString()
   @IsNotEmpty()
+  @IsNotBlank({ message: 'address must not contain only whitespaces' })
   address: string;
 
   @IsObject()
@@ -69,6 +74,7 @@ export class CreateLocationDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsNotBlank({ message: 'description must not contain only whitespaces' })
   description: string;
 
   @IsArray()
@@ -79,15 +85,28 @@ export class CreateLocationDto {
   @IsEnum(LocationCategory)
   locationCategory: LocationCategory;
 
+  @IsOptional()
   @IsObject()
   @ValidateNested()
-  @Type(() => AveragePrice)
-  averagePrice: AveragePrice;
+  @Type(() => PricePerPerson)
+  @IsValidPriceRange({
+    message: 'The min price must be smaller than max price',
+  })
+  pricePerPerson: PricePerPerson;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @ArrayMinSize(0)
-  @ArrayMaxSize(Object.keys(WeekDay).length)
+  @IsObject()
+  @ValidateNested()
   @Type(() => Period)
-  periods: [Period];
+  @IsValidPeriod({
+    message: 'The opening time must be before the closing time on weekday',
+  })
+  weekday: Period;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Period)
+  @IsValidPeriod({
+    message: 'The opening time must be before the closing time on weekend',
+  })
+  weekend: Period;
 }

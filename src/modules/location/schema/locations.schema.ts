@@ -2,7 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes } from 'mongoose';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { Currency } from '../../../common/currency.enum';
-import { WeekDay } from '../../../common/weekday.enum';
 import { CommonConstant } from '../../../common/constant';
 import { User } from '../../user/schema/users.schema';
 
@@ -53,7 +52,11 @@ export class Location {
 
   @Prop({
     type: {
-      value: {
+      min: {
+        type: Number,
+        default: 0,
+      },
+      max: {
         type: Number,
         default: 0,
       },
@@ -63,33 +66,46 @@ export class Location {
         default: Currency.VND,
       },
     },
-    required: true,
+    required: false,
   })
-  averagePrice: {
-    value: number;
+  pricePerPerson: {
+    min: number;
+    max: number;
     currency: Currency;
   };
 
   @Prop({
-    type: [
-      {
-        day: {
-          type: Number,
-          enum: WeekDay,
-        },
-        openTime: {
-          type: String,
-          match: CommonConstant.TimeRegex,
-        },
-        closeTime: {
-          type: String,
-          match: CommonConstant.TimeRegex,
-        },
+    type: {
+      openTime: {
+        type: String,
+        match: CommonConstant.TimeRegex,
       },
-    ],
+      closeTime: {
+        type: String,
+        match: CommonConstant.TimeRegex,
+      },
+    },
+    required: true,
   })
-  periods: {
-    day: WeekDay;
+  weekday: {
+    openTime: string;
+    closeTime: string;
+  };
+
+  @Prop({
+    type: {
+      openTime: {
+        type: String,
+        match: CommonConstant.TimeRegex,
+      },
+      closeTime: {
+        type: String,
+        match: CommonConstant.TimeRegex,
+      },
+    },
+    required: true,
+  })
+  weekend: {
     openTime: string;
     closeTime: string;
   };
@@ -133,7 +149,9 @@ export const LocationSchema = SchemaFactory.createForClass(Location);
 LocationSchema.index({ name: 1 });
 LocationSchema.index({ address: 1 });
 LocationSchema.index({ locationCategory: 1 });
-LocationSchema.index({ periods: 1 });
+LocationSchema.index({ weekday: 1 });
+LocationSchema.index({ weekend: 1 });
+LocationSchema.index({ pricePerPerson: 1 });
 LocationSchema.index({ heartCount: 1 });
 LocationSchema.index({ createdAt: 1 });
 LocationSchema.index({ location: '2dsphere' });

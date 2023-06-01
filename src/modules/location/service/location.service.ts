@@ -4,9 +4,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { LocationRepository } from '../repository/location.repository';
-import { CreateLocationDto, Period } from '../dto/create-location.dto';
+import { CreateLocationDto } from '../dto/create-location.dto';
 import { LocationDocument } from '../schema/locations.schema';
 import { UserDocument } from '../../user/schema/users.schema';
+import { Utils } from '../../../common/utils';
 
 @Injectable()
 export class LocationService {
@@ -19,18 +20,21 @@ export class LocationService {
     if (!user) {
       throw new UnauthorizedException('You have to sign in to create location');
     }
-    
-    const { name, address, periods } = locationData;
-    if (!this.validatePeriods(periods)) {
-      throw new BadRequestException('Open time must be before close time');
-    }
 
+    // format address, name and description
+    locationData.address = Utils.removeZipcode(locationData.address);
+    locationData.name = Utils.removeSpace(locationData.name);
+    locationData.description = locationData.description.trim();
+
+    const { name, address } = locationData;
     const isDuplicate = await this.locationRepository.isDuplicate(
       name,
       address,
     );
     if (isDuplicate) {
-      throw new BadRequestException('This location is already created');
+      throw new BadRequestException(
+        `Location with name: '${name}' and address: '${address}' is already registered`,
+      );
     }
 
     return await this.locationRepository.createLocation(locationData, user);
@@ -52,19 +56,5 @@ export class LocationService {
       queryObject,
       next_cursor,
     );
-  }
-
-  private validatePeriods(periods: [Period]): boolean {
-    for (let period of periods) {
-      if (!this.validatePeriod(period)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private validatePeriod(period: Period) {
-    return period.openTime < period.closeTime;
   }
 }
