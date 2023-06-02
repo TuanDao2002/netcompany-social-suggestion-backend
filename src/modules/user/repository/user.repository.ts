@@ -18,8 +18,13 @@ export class UserRepository {
     return this.userModel.findOne({ username, isVerified: true }).exec();
   }
 
-  public async checkVerified(email: string): Promise<UserDocument> {
-    return this.userModel.findOne({ email, isVerified: true }).exec();
+  public async validateNewUser(
+    email: string,
+    username: string,
+  ): Promise<UserDocument> {
+    return await this.userModel.findOne({
+      $and: [{ isVerified: true }, { $or: [{ email }, { username }] }],
+    });
   }
 
   public async findById(id: string): Promise<UserDocument> {
