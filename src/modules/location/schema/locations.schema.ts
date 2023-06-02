@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, SchemaTypes } from 'mongoose';
+import mongoose, { HydratedDocument, ObjectId, SchemaTypes } from 'mongoose';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { Currency } from '../../../common/currency.enum';
 import { CommonConstant } from '../../../common/constant';
@@ -125,7 +125,7 @@ export class Location {
   @Prop({
     type: {
       userId: {
-        type: SchemaTypes.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: User.name,
         required: true,
       },
