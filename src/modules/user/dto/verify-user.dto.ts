@@ -1,4 +1,3 @@
-import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -6,13 +5,11 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
-  IsObject,
   IsString,
   Max,
   Min,
   NotEquals,
-  ValidateIf,
-  ValidateNested
+  ValidateIf
 } from 'class-validator';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { SearchDistance } from "../../../common/search-distance.enum";
@@ -52,9 +49,4 @@ export class VerifyUserDto {
   @Min(SearchDistance.MIN_DISTANCE)
   @Max(SearchDistance.MAX_DISTANCE)
   searchDistance: number;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => Coordinates)
-  coordinates: Coordinates;
 }

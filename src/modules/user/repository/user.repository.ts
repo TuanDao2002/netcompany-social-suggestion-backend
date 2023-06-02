@@ -5,7 +5,6 @@ import { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { VerifyUserDto } from '../dto/verify-user.dto';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
-import { UpdateUserLocationDto } from '../dto/update-user-location.dto';
 
 @Injectable()
 export class UserRepository {
@@ -17,6 +16,15 @@ export class UserRepository {
 
   public async findByUsername(username: string): Promise<UserDocument> {
     return this.userModel.findOne({ username, isVerified: true }).exec();
+  }
+
+  public async validateNewUser(
+    email: string,
+    username: string,
+  ): Promise<UserDocument> {
+    return await this.userModel.findOne({
+      $and: [{ isVerified: true }, { $or: [{ email }, { username }] }],
+    });
   }
 
   public async findById(id: string): Promise<UserDocument> {
@@ -45,7 +53,7 @@ export class UserRepository {
 
   public async updateById(
     id: string,
-    updateData: UpdateUserProfileDto | UpdateUserLocationDto,
+    updateData: UpdateUserProfileDto,
   ): Promise<UserDocument> {
     return await this.userModel.findByIdAndUpdate(id, updateData, {
       new: true,

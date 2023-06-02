@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable
 } from '@nestjs/common';
-import { UpdateUserLocationDto } from "../dto/update-user-location.dto";
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { UserRepository } from '../repository/user.repository';
 import { UserDocument } from '../schema/users.schema';
@@ -50,12 +49,5 @@ export class UserService {
       user._id.toHexString(),
       updateData,
     );
-  }
-
-  public async updateUserLocation(
-    updateCoordinate: UpdateUserLocationDto,
-    user: UserDocument,
-  ): Promise<UserDocument> {
-    return await this.userRepository.updateById(user._id.toHexString(), updateCoordinate)
   }
 }
