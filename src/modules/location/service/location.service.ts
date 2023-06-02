@@ -8,6 +8,7 @@ import { CreateLocationDto } from '../dto/create-location.dto';
 import { LocationDocument } from '../schema/locations.schema';
 import { UserDocument } from '../../user/schema/users.schema';
 import { Utils } from '../../../common/utils';
+import { UpdateLocationDto } from '../dto/update-location.dto';
 
 @Injectable()
 export class LocationService {
@@ -38,6 +39,46 @@ export class LocationService {
     }
 
     return await this.locationRepository.createLocation(locationData, user);
+  }
+
+  public async updateLocation(
+    updateLocationData: UpdateLocationDto,
+    user: UserDocument,
+  ) {
+    const { locationId, placeId, name, address, description } =
+      updateLocationData;
+    const existingLocation = await this.locationRepository.findOneById(
+      locationId,
+    );
+    if (!existingLocation) {
+      throw new BadRequestException('This location does not exist');
+    }
+
+    if (String(user._id) !== String(existingLocation.createdUser.userId)) {
+      throw new UnauthorizedException('Not allowed to edit this location');
+    }
+
+    if (
+      placeId !== existingLocation.placeId ||
+      name !== existingLocation.name
+    ) {
+      const findDuplicate = await this.locationRepository.findDuplicate(
+        name,
+        placeId,
+      );
+      if (findDuplicate) {
+        throw new BadRequestException(
+          `Location with name: '${findDuplicate.name}' and address: '${findDuplicate.address}' is already registered`,
+        );
+      }
+    }
+
+    // format address, name and description
+    updateLocationData.address = Utils.removeSpace(address);
+    updateLocationData.name = Utils.removeSpace(name);
+    updateLocationData.description = description?.trim();
+
+    return await this.locationRepository.updateLocation(updateLocationData);
   }
 
   public async viewCreatedLocation(

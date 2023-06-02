@@ -5,6 +5,7 @@ import { Location, LocationDocument } from '../schema/locations.schema';
 import { CreateLocationDto } from '../dto/create-location.dto';
 import { UserDocument } from '../../user/schema/users.schema';
 import { CommonConstant } from '../../../common/constant';
+import { UpdateLocationDto } from '../dto/update-location.dto';
 
 @Injectable()
 export class LocationRepository {
@@ -26,6 +27,20 @@ export class LocationRepository {
       },
     });
     return createdLocation.save();
+  }
+
+  public async findOneById(locationId: string): Promise<LocationDocument> {
+    return await this.locationModel.findById(locationId);
+  }
+
+  public async updateLocation(updateLocationData: UpdateLocationDto) {
+    return await this.locationModel.findOneAndUpdate(
+      {
+        _id: updateLocationData.locationId,
+      },
+      updateLocationData,
+      { new: true },
+    );
   }
 
   public async findDuplicate(
