@@ -83,9 +83,18 @@ export class AuthService {
       // throw new BadRequestException('Invalid Netcompany email'); // for production only
     }
 
-    const duplicateUser = await this.userRepository.findByUsername(payload.username);
+    const duplicateUser = await this.userRepository.findByUsername(
+      payload.username,
+    );
     if (duplicateUser) {
-      throw new BadRequestException("This username is duplicated with other account or the account is already verified")
+      throw new BadRequestException(
+        'This username is duplicated with other account or the account is already verified',
+      );
+    }
+
+    const isVerified = await this.userRepository.checkVerified(email);
+    if (isVerified) {
+      throw new BadRequestException('This account is already verified');
     }
 
     const verifiedUser = await this.userRepository.updateByEmail(

@@ -37,24 +37,6 @@ export class User {
 
   @Prop({ required: false, default: SearchDistance.MIN_DISTANCE })
   searchDistance: number;
-
-  @Prop({
-    type: {
-      latitude: {
-        type: Number,
-        default: 0,
-      },
-      longitude: {
-        type: Number,
-        default: 0,
-      },
-    },
-    required: false,
-  })
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
