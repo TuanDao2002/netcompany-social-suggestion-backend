@@ -33,7 +33,9 @@ export class LocationRepository {
     return await this.locationModel.findById(locationId);
   }
 
-  public async updateLocation(updateLocationData: UpdateLocationDto) {
+  public async updateLocation(
+    updateLocationData: UpdateLocationDto,
+  ): Promise<LocationDocument> {
     return await this.locationModel.findOneAndUpdate(
       {
         _id: updateLocationData.locationId,
@@ -41,6 +43,10 @@ export class LocationRepository {
       updateLocationData,
       { new: true },
     );
+  }
+
+  public async deleteLocation(locationId: string): Promise<void> {
+    await this.locationModel.deleteOne({ _id: locationId });
   }
 
   public async findDuplicate(
