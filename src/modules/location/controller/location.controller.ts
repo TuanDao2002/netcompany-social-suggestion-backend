@@ -1,12 +1,15 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { LocationService } from '../service/location.service';
@@ -15,7 +18,8 @@ import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { LocationDocument } from '../schema/locations.schema';
 import { CurrentUser } from '../../auth/guard/user.decorator';
 import { UserDocument } from '../../user/schema/users.schema';
-import { UpdateLocationDto } from "../dto/update-location.dto";
+import { UpdateLocationDto } from '../dto/update-location.dto';
+import { Response } from 'express';
 
 @Controller('location')
 @UseGuards(JwtGuard)
@@ -38,6 +42,17 @@ export class LocationController {
     @CurrentUser() user: UserDocument,
   ) {
     return await this.locationService.updateLocation(body, user);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete(':locationId')
+  async deleteLocation(
+    @Param('locationId') locationId: string,
+    @CurrentUser() user: UserDocument,
+    @Res() res: Response,
+  ) {
+    await this.locationService.deleteLocation(locationId, user);
+    res.json({ msg: 'The location is deleted' });
   }
 
   @HttpCode(HttpStatus.OK)

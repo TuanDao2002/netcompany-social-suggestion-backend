@@ -44,7 +44,7 @@ export class LocationService {
   public async updateLocation(
     updateLocationData: UpdateLocationDto,
     user: UserDocument,
-  ) {
+  ): Promise<LocationDocument> {
     const { locationId, placeId, name, address, description } =
       updateLocationData;
     const existingLocation = await this.locationRepository.findOneById(
@@ -54,7 +54,7 @@ export class LocationService {
       throw new BadRequestException('This location does not exist');
     }
 
-    if (String(user._id) !== String(existingLocation.createdUser.userId)) {
+    if (!this.isOwner(user, existingLocation)) {
       throw new UnauthorizedException('Not allowed to edit this location');
     }
 
@@ -81,6 +81,24 @@ export class LocationService {
     return await this.locationRepository.updateLocation(updateLocationData);
   }
 
+  public async deleteLocation(
+    locationId: string,
+    user: UserDocument,
+  ): Promise<void> {
+    const existingLocation = await this.locationRepository.findOneById(
+      locationId,
+    );
+    if (!existingLocation) {
+      throw new BadRequestException('This location does not exist');
+    }
+
+    if (!this.isOwner(user, existingLocation)) {
+      throw new UnauthorizedException('Not allowed to delete this location');
+    }
+
+    await this.locationRepository.deleteLocation(locationId);
+  }
+
   public async viewCreatedLocation(
     next_cursor: string,
     user: UserDocument,
@@ -97,5 +115,9 @@ export class LocationService {
       queryObject,
       next_cursor,
     );
+  }
+
+  public isOwner(user: UserDocument, existingLocation: LocationDocument): boolean {
+    return String(user._id) === String(existingLocation.createdUser.userId);
   }
 }
