@@ -78,6 +78,30 @@ export class LocationController {
     results: any;
     next_cursor: string;
   }> {
-    return await this.locationService.viewLatestLocation(next_cursor, latitude, longitude, user);
+    return await this.locationService.viewLatestLocation(
+      next_cursor,
+      latitude,
+      longitude,
+      user,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('featured')
+  async viewFeaturedLocation(
+    @Query('next_cursor') next_cursor: string,
+    @Query('latitude') latitude: number,
+    @Query('longitude') longitude: number,
+    @CurrentUser() user: UserDocument,
+  ): Promise<{
+    results: any;
+    next_cursor: string;
+  }> {
+    return await this.locationService.viewFeaturedLocation(
+      next_cursor,
+      latitude,
+      longitude,
+      user,
+    );
   }
 }

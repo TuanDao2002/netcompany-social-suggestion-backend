@@ -94,9 +94,14 @@ export class LocationRepository {
       if (sortByHeartCount) {
         // if sort by heart count
         const [heartCount, createdAt, _id] = decodedFromNextCursor;
-        queryObject.heartCount = { $lte: heartCount };
-        queryObject.createdAt = { $lte: createdAt };
-        queryObject._id = { $lt: _id };
+        queryObject.$or = [
+          { heartCount: { $lt: heartCount } },
+          {
+            heartCount: heartCount,
+            createdAt: { $lte: createdAt },
+            _id: { $lt: _id },
+          },
+        ];
       } else {
         // otherwise, sort by default to find latest
         const [createdAt, _id] = decodedFromNextCursor;
@@ -106,7 +111,9 @@ export class LocationRepository {
     }
 
     let locations = this.locationModel.find(queryObject);
-    locations = locations.sort('-createdAt -_id');
+    locations = sortByHeartCount
+      ? locations.sort('-heartCount -createdAt -_id')
+      : locations.sort('-createdAt -_id');
 
     let results: any[] = await locations;
     next_cursor = null;

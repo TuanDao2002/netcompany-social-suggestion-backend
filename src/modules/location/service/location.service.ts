@@ -164,6 +164,46 @@ export class LocationService {
     );
   }
 
+  public async viewFeaturedLocation(
+    next_cursor: string,
+    latitude: number,
+    longitude: number,
+    user: UserDocument,
+  ): Promise<{
+    results: any;
+    next_cursor: string;
+  }> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
+    if (!latitude || !longitude) {
+      throw new BadRequestException(
+        'You have not sent coordinates to search locations',
+      );
+    }
+
+    const { locationCategories, searchDistance } = user;
+
+    const queryObject = {
+      locationCategory: { $in: locationCategories },
+      location: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [longitude, latitude],
+          },
+          $maxDistance: searchDistance * 1000,
+        },
+      },
+    };
+    return await this.locationRepository.viewLocations(
+      queryObject,
+      next_cursor,
+      true,
+    );
+  }
+
   public isOwner(
     user: UserDocument,
     existingLocation: LocationDocument,
