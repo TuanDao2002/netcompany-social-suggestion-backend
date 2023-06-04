@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
@@ -13,6 +14,7 @@ import { CurrentUser } from '../../auth/guard/user.decorator';
 import { UserDocument } from '../schema/users.schema';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
+import { Response } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -34,7 +36,8 @@ export class UserController {
   async updateUserProfile(
     @Body() updateData: UpdateUserProfileDto,
     @CurrentUser() user: UserDocument,
-  ): Promise<UserDocument> {
-    return await this.userService.updateUserProfile(updateData, user);
+    @Res() res: Response,
+  ): Promise<void> {
+    return await this.userService.updateUserProfile(updateData, user, res);
   }
 }

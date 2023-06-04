@@ -15,5 +15,5 @@ export class CommonConstant {
 
   public static readonly TimeRegex = /^\d{4}$/;
 
-  public static readonly LOCATION_PAGINATION_LIMIT = 3;
+  public static readonly LOCATION_PAGINATION_LIMIT = 5;
 }

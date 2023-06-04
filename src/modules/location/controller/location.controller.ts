@@ -66,4 +66,18 @@ export class LocationController {
   }> {
     return await this.locationService.viewCreatedLocation(next_cursor, user);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('latest')
+  async viewLatestLocation(
+    @Query('next_cursor') next_cursor: string,
+    @Query('latitude') latitude: number,
+    @Query('longitude') longitude: number,
+    @CurrentUser() user: UserDocument,
+  ): Promise<{
+    results: any;
+    next_cursor: string;
+  }> {
+    return await this.locationService.viewLatestLocation(next_cursor, latitude, longitude, user);
+  }
 }

@@ -19,7 +19,7 @@ export class LocationService {
     user: UserDocument,
   ): Promise<LocationDocument> {
     if (!user) {
-      throw new UnauthorizedException('You have to sign in to create location');
+      throw new UnauthorizedException('You have not signed in yet');
     }
 
     // format address, name and description
@@ -45,6 +45,10 @@ export class LocationService {
     updateLocationData: UpdateLocationDto,
     user: UserDocument,
   ): Promise<LocationDocument> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
     const { locationId, placeId, name, address, description } =
       updateLocationData;
     const existingLocation = await this.locationRepository.findOneById(
@@ -85,6 +89,10 @@ export class LocationService {
     locationId: string,
     user: UserDocument,
   ): Promise<void> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
     const existingLocation = await this.locationRepository.findOneById(
       locationId,
     );
@@ -107,17 +115,59 @@ export class LocationService {
     next_cursor: string;
   }> {
     if (!user) {
-      throw new UnauthorizedException('You have to sign in to create location');
+      throw new UnauthorizedException('You have not signed in yet');
     }
 
     const queryObject = { 'createdUser.userId': user._id };
-    return await this.locationRepository.findCreatedLocations(
+    return await this.locationRepository.viewLocations(
       queryObject,
       next_cursor,
     );
   }
 
-  public isOwner(user: UserDocument, existingLocation: LocationDocument): boolean {
+  public async viewLatestLocation(
+    next_cursor: string,
+    latitude: number,
+    longitude: number,
+    user: UserDocument,
+  ): Promise<{
+    results: any;
+    next_cursor: string;
+  }> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
+    if (!latitude || !longitude) {
+      throw new BadRequestException(
+        'You have not sent coordinates to search locations',
+      );
+    }
+
+    const { locationCategories, searchDistance } = user;
+
+    const queryObject = {
+      locationCategory: { $in: locationCategories },
+      location: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [longitude, latitude],
+          },
+          $maxDistance: searchDistance * 1000,
+        },
+      },
+    };
+    return await this.locationRepository.viewLocations(
+      queryObject,
+      next_cursor,
+    );
+  }
+
+  public isOwner(
+    user: UserDocument,
+    existingLocation: LocationDocument,
+  ): boolean {
     return String(user._id) === String(existingLocation.createdUser.userId);
   }
 }

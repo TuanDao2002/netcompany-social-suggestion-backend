@@ -45,6 +45,19 @@ export class LocationRepository {
     );
   }
 
+  public async updateLocationCreator(updateUser: UserDocument): Promise<void> {
+    await this.locationModel.updateMany(
+      { 'createdUser.userId': updateUser._id },
+      {
+        $set: {
+          'createdUser.username': updateUser.username,
+          'createdUser.imageUrl': updateUser.imageUrl,
+        },
+      },
+      { new: true },
+    );
+  }
+
   public async deleteLocation(locationId: string): Promise<void> {
     await this.locationModel.deleteOne({ _id: locationId });
   }
@@ -66,20 +79,30 @@ export class LocationRepository {
       : null;
   }
 
-  public async findCreatedLocations(
+  public async viewLocations(
     queryObject: any,
     next_cursor: string,
+    sortByHeartCount: boolean = false,
   ): Promise<{
     results: any;
     next_cursor: string;
   }> {
     if (next_cursor) {
-      const [createdAt, _id] = Buffer.from(next_cursor, 'base64')
+      const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
         .toString('ascii')
         .split('_');
-
-      queryObject.createdAt = { $lte: createdAt };
-      queryObject._id = { $lt: _id };
+      if (sortByHeartCount) {
+        // if sort by heart count
+        const [heartCount, createdAt, _id] = decodedFromNextCursor;
+        queryObject.heartCount = { $lte: heartCount };
+        queryObject.createdAt = { $lte: createdAt };
+        queryObject._id = { $lt: _id };
+      } else {
+        // otherwise, sort by default to find latest
+        const [createdAt, _id] = decodedFromNextCursor;
+        queryObject.createdAt = { $lte: createdAt };
+        queryObject._id = { $lt: _id };
+      }
     }
 
     let locations = this.locationModel.find(queryObject);
@@ -89,9 +112,17 @@ export class LocationRepository {
     next_cursor = null;
     if (results.length > CommonConstant.LOCATION_PAGINATION_LIMIT) {
       const lastResult = results[CommonConstant.LOCATION_PAGINATION_LIMIT - 1];
-      next_cursor = Buffer.from(
-        lastResult.createdAt.toISOString() + '_' + lastResult._id,
-      ).toString('base64');
+      next_cursor = sortByHeartCount
+        ? Buffer.from(
+            lastResult.heartCount +
+              '_' +
+              lastResult.createdAt.toISOString() +
+              '_' +
+              lastResult._id,
+          ).toString('base64')
+        : Buffer.from(
+            lastResult.createdAt.toISOString() + '_' + lastResult._id,
+          ).toString('base64');
 
       results = results.slice(0, CommonConstant.LOCATION_PAGINATION_LIMIT);
     }
