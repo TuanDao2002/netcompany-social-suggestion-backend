@@ -207,10 +207,28 @@ export class LocationService {
 
   public async filterLocation(
     next_cursor: string,
-    query: FilterLocationDto,
+    queryParams: FilterLocationDto,
     user: UserDocument,
   ) {
-    
+    const { searchInput, locationCategory, weekday, weekend, searchDistance } =
+      queryParams;
+
+    let queryObject: any = {};
+    const formattedSearchInput = searchInput.trim();
+    if (formattedSearchInput) {
+      queryObject.$or = [
+        { name: { $regex: `${formattedSearchInput}`, $options: 'i' } },
+        { address: { $regex: `${formattedSearchInput}`, $options: 'i' } },
+      ];
+    }
+
+    const results = await this.locationRepository.filterLocation(
+      queryObject,
+      next_cursor,
+      user,
+    );
+
+    return { results, queryParams };
   }
 
   public isOwner(

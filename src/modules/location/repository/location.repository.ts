@@ -123,4 +123,61 @@ export class LocationRepository {
       next_cursor,
     };
   }
+
+  public async filterLocation(
+    queryObject: any,
+    next_cursor: string,
+    user: UserDocument,
+  ) {
+    if (next_cursor) {
+      const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
+        .toString('ascii')
+        .split('_');
+
+      const [heartCount, createdAt, _id] = decodedFromNextCursor;
+      queryObject.$or = [
+        { heartCount: { $lt: heartCount } },
+        {
+          heartCount: heartCount,
+          createdAt: { $lte: createdAt },
+          _id: { $lt: _id },
+        },
+      ];
+    }
+
+    const pipelineStage: any = [
+      {
+        $sort: { heartCount: -1, createdAt: -1, _id: -1 },
+      },
+
+      {
+        $match: queryObject,
+      },
+
+      {
+        $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
+      },
+    ];
+
+    let results: any[] = await this.locationModel.aggregate(pipelineStage);
+    next_cursor = null;
+
+    if (results.length > CommonConstant.LOCATION_PAGINATION_LIMIT) {
+      const lastResult = results[CommonConstant.LOCATION_PAGINATION_LIMIT - 1];
+      next_cursor = Buffer.from(
+        lastResult.heartCount +
+          '_' +
+          lastResult.createdAt.toISOString() +
+          '_' +
+          lastResult._id,
+      ).toString('base64');
+
+      results = results.slice(0, CommonConstant.LOCATION_PAGINATION_LIMIT);
+    }
+
+    return {
+      results,
+      next_cursor,
+    };
+  }
 }

@@ -110,9 +110,9 @@ export class LocationController {
   @Get('filter')
   async viewFilteredLocation(
     @Query('next_cursor') next_cursor: string,
-    @Query() query: FilterLocationDto,
+    @Query() queryParams: FilterLocationDto,
     @CurrentUser() user: UserDocument,
   ) {
-    return await this.locationService.filterLocation(next_cursor, query, user);
+    return await this.locationService.filterLocation(next_cursor, queryParams, user);
   }
 }
