@@ -20,7 +20,7 @@ export class LocationRepository {
     const createdLocation = new this.locationModel({
       ...createLocationDto,
       userId: user._id,
-      nameAddress: `${createLocationDto.name} ${createLocationDto.address}`
+      nameAddress: `${createLocationDto.name} ${createLocationDto.address}`,
     });
     return createdLocation.save();
   }
@@ -36,7 +36,10 @@ export class LocationRepository {
       {
         _id: updateLocationData.locationId,
       },
-      updateLocationData,
+      {
+        updateLocationData,
+        nameAddress: `${updateLocationData.name} ${updateLocationData.address}`,
+      },
       { new: true },
     );
   }
@@ -148,13 +151,11 @@ export class LocationRepository {
 
     const pipelineStage: any = [
       {
-        $sort: { heartCount: -1, createdAt: -1, _id: -1 },
-      },
-
-      {
         $match: queryObject,
       },
-
+      {
+        $sort: { heartCount: -1, createdAt: -1, _id: -1 },
+      },
       {
         $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },

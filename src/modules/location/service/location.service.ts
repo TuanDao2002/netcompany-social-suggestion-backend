@@ -214,25 +214,53 @@ export class LocationService {
       queryParams;
 
     let queryObject: any = {};
-    const formattedSearchInput = Utils.removeSpace(
-      searchInput.replace(/[^a-z0-9 ]/gi, ''),
-    );
-    if (formattedSearchInput) {
-      const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
-      queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
+    if (searchInput) {
+      const formattedSearchInput = Utils.removeSpace(
+        searchInput.replace(/[^\p{L}\d\s]/giu, ''),
+      );
+      if (formattedSearchInput) {
+        const regexPattern = `.*${formattedSearchInput
+          .split(' ')
+          .join('.*')}.*`;
+        console.log(
+          '🚀 ~ file: location.service.ts:225 ~ LocationService ~ regexPattern:',
+          regexPattern,
+        );
+        queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
+      }
     }
 
     if (locationCategory) {
       queryObject.locationCategory = locationCategory;
     }
 
-    const results = await this.locationRepository.filterLocation(
+    let periodQuery: any[] = [];
+
+    if (weekday) {
+      periodQuery.push({ 'weekday.openTime': { $gte: weekday.openTime } });
+      periodQuery.push({ 'weekday.closeTime': { $lte: weekday.closeTime } });
+    }
+
+    if (weekend) {
+      periodQuery.push({ 'weekend.openTime': { $gte: weekend.openTime } });
+      periodQuery.push({ 'weekend.closeTime': { $lte: weekend.closeTime } });
+    }
+
+    if (periodQuery.length > 0) {
+      queryObject.$and = periodQuery;
+    }
+
+    const filteredData = await this.locationRepository.filterLocation(
       queryObject,
       next_cursor,
       user,
     );
 
-    return { results, queryParams };
+    return {
+      results: filteredData.results,
+      next_cursor: filteredData.next_cursor,
+      queryParams,
+    };
   }
 
   public isOwner(

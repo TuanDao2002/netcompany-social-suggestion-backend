@@ -21,6 +21,7 @@ import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateLocationDto } from '../dto/update-location.dto';
 import { Response } from 'express';
 import { FilterLocationDto } from '../dto/filter-location.dto';
+import { QueryParamsTransformPipe } from "../../../common/parse-query.pipe";
 
 @Controller('location')
 @UseGuards(JwtGuard)
@@ -110,7 +111,7 @@ export class LocationController {
   @Get('filter')
   async viewFilteredLocation(
     @Query('next_cursor') next_cursor: string,
-    @Query() queryParams: FilterLocationDto,
+    @Query(QueryParamsTransformPipe) queryParams: FilterLocationDto,
     @CurrentUser() user: UserDocument,
   ) {
     return await this.locationService.filterLocation(next_cursor, queryParams, user);

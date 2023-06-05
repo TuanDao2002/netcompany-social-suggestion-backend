@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -17,6 +18,9 @@ import { SearchDistance } from '../../../common/search-distance.enum';
 export class FilterLocationDto {
   @IsOptional()
   @IsString()
+  @MaxLength(100, {
+    message: 'Search input should be less than 100 characters',
+  })
   searchInput: string;
 
   @IsOptional()
@@ -28,7 +32,7 @@ export class FilterLocationDto {
   @ValidateNested()
   @Type(() => Period)
   @IsValidPeriod({
-    message: 'The opening time must be before the closing time on weekday',
+    message: 'The opening time and closing time on weekday must be valid',
   })
   weekday: Period;
 
@@ -37,7 +41,7 @@ export class FilterLocationDto {
   @ValidateNested()
   @Type(() => Period)
   @IsValidPeriod({
-    message: 'The opening time must be before the closing time on weekend',
+    message: 'The opening time and closing time on weekend must be valid',
   })
   weekend: Period;
 
