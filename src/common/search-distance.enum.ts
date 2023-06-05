@@ -1,4 +1,4 @@
 export enum SearchDistance {
   MIN_DISTANCE = 5,
-  MAX_DISTANCE = 50,
+  MAX_DISTANCE = 100,
 }

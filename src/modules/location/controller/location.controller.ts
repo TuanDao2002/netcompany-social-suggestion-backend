@@ -20,6 +20,7 @@ import { CurrentUser } from '../../auth/guard/user.decorator';
 import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateLocationDto } from '../dto/update-location.dto';
 import { Response } from 'express';
+import { FilterLocationDto } from '../dto/filter-location.dto';
 
 @Controller('location')
 @UseGuards(JwtGuard)
@@ -103,5 +104,15 @@ export class LocationController {
       longitude,
       user,
     );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('filter')
+  async viewFilteredLocation(
+    @Query('next_cursor') next_cursor: string,
+    @Query() query: FilterLocationDto,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return await this.locationService.filterLocation(next_cursor, query, user);
   }
 }

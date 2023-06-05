@@ -19,12 +19,7 @@ export class LocationRepository {
   ): Promise<LocationDocument> {
     const createdLocation = new this.locationModel({
       ...createLocationDto,
-      createdUser: {
-        userId: user._id,
-        username: user.username,
-        email: user.email,
-        imageUrl: user.imageUrl,
-      },
+      userId: user._id,
     });
     return createdLocation.save();
   }
@@ -41,19 +36,6 @@ export class LocationRepository {
         _id: updateLocationData.locationId,
       },
       updateLocationData,
-      { new: true },
-    );
-  }
-
-  public async updateLocationCreator(updateUser: UserDocument): Promise<void> {
-    await this.locationModel.updateMany(
-      { 'createdUser.userId': updateUser._id },
-      {
-        $set: {
-          'createdUser.username': updateUser.username,
-          'createdUser.imageUrl': updateUser.imageUrl,
-        },
-      },
       { new: true },
     );
   }
@@ -110,7 +92,9 @@ export class LocationRepository {
       }
     }
 
-    let locations = this.locationModel.find(queryObject);
+    let locations = this.locationModel
+      .find(queryObject)
+      .select('_id name address imageUrls heartCount createdAt');
     locations = sortByHeartCount
       ? locations.sort('-heartCount -createdAt -_id')
       : locations.sort('-createdAt -_id');

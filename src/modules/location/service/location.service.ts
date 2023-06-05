@@ -9,6 +9,7 @@ import { LocationDocument } from '../schema/locations.schema';
 import { UserDocument } from '../../user/schema/users.schema';
 import { Utils } from '../../../common/utils';
 import { UpdateLocationDto } from '../dto/update-location.dto';
+import { FilterLocationDto } from '../dto/filter-location.dto';
 
 @Injectable()
 export class LocationService {
@@ -118,7 +119,7 @@ export class LocationService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    const queryObject = { 'createdUser.userId': user._id };
+    const queryObject = { userId: user._id };
     return await this.locationRepository.viewLocations(
       queryObject,
       next_cursor,
@@ -204,10 +205,18 @@ export class LocationService {
     );
   }
 
+  public async filterLocation(
+    next_cursor: string,
+    query: FilterLocationDto,
+    user: UserDocument,
+  ) {
+    
+  }
+
   public isOwner(
     user: UserDocument,
     existingLocation: LocationDocument,
   ): boolean {
-    return String(user._id) === String(existingLocation.createdUser.userId);
+    return String(user._id) === String(existingLocation.userId);
   }
 }
