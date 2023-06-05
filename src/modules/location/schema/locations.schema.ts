@@ -28,6 +28,12 @@ export class Location {
   address: string;
 
   @Prop({
+    required: true,
+    trim: true,
+  })
+  nameAddress: string;
+
+  @Prop({
     type: {
       type: String,
       enum: ['Point'],
@@ -133,7 +139,7 @@ export class Location {
 export const LocationSchema = SchemaFactory.createForClass(Location);
 LocationSchema.index({ placeId: 1 });
 LocationSchema.index({ name: 1 });
-LocationSchema.index({ address: 1 });
+LocationSchema.index({ nameAddress: 1 });
 LocationSchema.index({ locationCategory: 1 });
 LocationSchema.index({ weekday: 1 });
 LocationSchema.index({ weekend: 1 });

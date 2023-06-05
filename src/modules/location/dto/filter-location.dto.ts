@@ -11,7 +11,7 @@ import {
 import { LocationCategory } from '../../../common/location-category.enum';
 import { Type } from 'class-transformer';
 import { Period } from './create-location.dto';
-import { IsNotBlank, IsValidPeriod } from '../../../common/validator';
+import { IsValidPeriod } from '../../../common/validator';
 import { SearchDistance } from '../../../common/search-distance.enum';
 
 export class FilterLocationDto {

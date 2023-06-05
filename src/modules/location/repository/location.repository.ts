@@ -20,6 +20,7 @@ export class LocationRepository {
     const createdLocation = new this.locationModel({
       ...createLocationDto,
       userId: user._id,
+      nameAddress: `${createLocationDto.name} ${createLocationDto.address}`
     });
     return createdLocation.save();
   }
@@ -98,11 +99,13 @@ export class LocationRepository {
     locations = sortByHeartCount
       ? locations.sort('-heartCount -createdAt -_id')
       : locations.sort('-createdAt -_id');
-
+    locations = locations.limit(CommonConstant.LOCATION_PAGINATION_LIMIT);
     let results: any[] = await locations;
+
+    const count = await this.locationModel.count(queryObject);
     next_cursor = null;
-    if (results.length > CommonConstant.LOCATION_PAGINATION_LIMIT) {
-      const lastResult = results[CommonConstant.LOCATION_PAGINATION_LIMIT - 1];
+    if (count > results.length) {
+      const lastResult = results[results.length - 1];
       next_cursor = sortByHeartCount
         ? Buffer.from(
             lastResult.heartCount +
@@ -114,8 +117,6 @@ export class LocationRepository {
         : Buffer.from(
             lastResult.createdAt.toISOString() + '_' + lastResult._id,
           ).toString('base64');
-
-      results = results.slice(0, CommonConstant.LOCATION_PAGINATION_LIMIT);
     }
 
     return {
@@ -158,12 +159,12 @@ export class LocationRepository {
         $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },
     ];
-
     let results: any[] = await this.locationModel.aggregate(pipelineStage);
-    next_cursor = null;
 
-    if (results.length > CommonConstant.LOCATION_PAGINATION_LIMIT) {
-      const lastResult = results[CommonConstant.LOCATION_PAGINATION_LIMIT - 1];
+    const count = await this.locationModel.count(queryObject);
+    next_cursor = null;
+    if (count > results.length) {
+      const lastResult = results[results.length - 1];
       next_cursor = Buffer.from(
         lastResult.heartCount +
           '_' +
@@ -171,8 +172,6 @@ export class LocationRepository {
           '_' +
           lastResult._id,
       ).toString('base64');
-
-      results = results.slice(0, CommonConstant.LOCATION_PAGINATION_LIMIT);
     }
 
     return {

@@ -214,12 +214,16 @@ export class LocationService {
       queryParams;
 
     let queryObject: any = {};
-    const formattedSearchInput = searchInput.trim();
+    const formattedSearchInput = Utils.removeSpace(
+      searchInput.replace(/[^a-z0-9 ]/gi, ''),
+    );
     if (formattedSearchInput) {
-      queryObject.$or = [
-        { name: { $regex: `${formattedSearchInput}`, $options: 'i' } },
-        { address: { $regex: `${formattedSearchInput}`, $options: 'i' } },
-      ];
+      const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
+      queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
+    }
+
+    if (locationCategory) {
+      queryObject.locationCategory = locationCategory;
     }
 
     const results = await this.locationRepository.filterLocation(
