@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument, ObjectId, SchemaTypes } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { LocationCategory } from '../../../common/location-category.enum';
 import { Currency } from '../../../common/currency.enum';
 import { CommonConstant } from '../../../common/constant';
@@ -26,6 +26,12 @@ export class Location {
     trim: true,
   })
   address: string;
+
+  @Prop({
+    required: true,
+    trim: true,
+  })
+  nameAddress: string;
 
   @Prop({
     type: {
@@ -123,43 +129,21 @@ export class Location {
   heartCount: number;
 
   @Prop({
-    type: {
-      userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: User.name,
-        required: true,
-      },
-      username: {
-        type: String,
-        required: true,
-      },
-      email: {
-        type: String,
-        requried: true,
-      },
-      imageUrl: {
-        type: String,
-        required: true,
-      },
-    },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: User.name,
+    required: true,
   })
-  createdUser: {
-    userId: string;
-    username: string;
-    email: string;
-    imageUrl: string;
-  };
+  userId: Types.ObjectId;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
 LocationSchema.index({ placeId: 1 });
 LocationSchema.index({ name: 1 });
-LocationSchema.index({ address: 1 });
+LocationSchema.index({ nameAddress: 1 });
 LocationSchema.index({ locationCategory: 1 });
 LocationSchema.index({ weekday: 1 });
 LocationSchema.index({ weekend: 1 });
-LocationSchema.index({ pricePerPerson: 1 });
 LocationSchema.index({ heartCount: 1 });
 LocationSchema.index({ createdAt: 1 });
 LocationSchema.index({ location: '2dsphere' });
-LocationSchema.index({ 'createdUser.userId': 1 });
+LocationSchema.index({ userId: 1 });

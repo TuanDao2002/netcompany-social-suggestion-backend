@@ -19,12 +19,8 @@ export class LocationRepository {
   ): Promise<LocationDocument> {
     const createdLocation = new this.locationModel({
       ...createLocationDto,
-      createdUser: {
-        userId: user._id,
-        username: user.username,
-        email: user.email,
-        imageUrl: user.imageUrl,
-      },
+      userId: user._id,
+      nameAddress: `${createLocationDto.name} ${createLocationDto.address}`
     });
     return createdLocation.save();
   }
@@ -41,19 +37,6 @@ export class LocationRepository {
         _id: updateLocationData.locationId,
       },
       updateLocationData,
-      { new: true },
-    );
-  }
-
-  public async updateLocationCreator(updateUser: UserDocument): Promise<void> {
-    await this.locationModel.updateMany(
-      { 'createdUser.userId': updateUser._id },
-      {
-        $set: {
-          'createdUser.username': updateUser.username,
-          'createdUser.imageUrl': updateUser.imageUrl,
-        },
-      },
       { new: true },
     );
   }
@@ -110,15 +93,19 @@ export class LocationRepository {
       }
     }
 
-    let locations = this.locationModel.find(queryObject);
+    let locations = this.locationModel
+      .find(queryObject)
+      .select('_id name address imageUrls heartCount createdAt');
     locations = sortByHeartCount
       ? locations.sort('-heartCount -createdAt -_id')
       : locations.sort('-createdAt -_id');
-
+    locations = locations.limit(CommonConstant.LOCATION_PAGINATION_LIMIT);
     let results: any[] = await locations;
+
+    const count = await this.locationModel.count(queryObject);
     next_cursor = null;
-    if (results.length > CommonConstant.LOCATION_PAGINATION_LIMIT) {
-      const lastResult = results[CommonConstant.LOCATION_PAGINATION_LIMIT - 1];
+    if (count > results.length) {
+      const lastResult = results[results.length - 1];
       next_cursor = sortByHeartCount
         ? Buffer.from(
             lastResult.heartCount +
@@ -130,8 +117,61 @@ export class LocationRepository {
         : Buffer.from(
             lastResult.createdAt.toISOString() + '_' + lastResult._id,
           ).toString('base64');
+    }
 
-      results = results.slice(0, CommonConstant.LOCATION_PAGINATION_LIMIT);
+    return {
+      results,
+      next_cursor,
+    };
+  }
+
+  public async filterLocation(
+    queryObject: any,
+    next_cursor: string,
+    user: UserDocument,
+  ) {
+    if (next_cursor) {
+      const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
+        .toString('ascii')
+        .split('_');
+
+      const [heartCount, createdAt, _id] = decodedFromNextCursor;
+      queryObject.$or = [
+        { heartCount: { $lt: heartCount } },
+        {
+          heartCount: heartCount,
+          createdAt: { $lte: createdAt },
+          _id: { $lt: _id },
+        },
+      ];
+    }
+
+    const pipelineStage: any = [
+      {
+        $sort: { heartCount: -1, createdAt: -1, _id: -1 },
+      },
+
+      {
+        $match: queryObject,
+      },
+
+      {
+        $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
+      },
+    ];
+    let results: any[] = await this.locationModel.aggregate(pipelineStage);
+
+    const count = await this.locationModel.count(queryObject);
+    next_cursor = null;
+    if (count > results.length) {
+      const lastResult = results[results.length - 1];
+      next_cursor = Buffer.from(
+        lastResult.heartCount +
+          '_' +
+          lastResult.createdAt.toISOString() +
+          '_' +
+          lastResult._id,
+      ).toString('base64');
     }
 
     return {

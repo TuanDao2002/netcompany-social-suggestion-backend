@@ -32,8 +32,7 @@ export class UserService {
   public async updateUserProfile(
     updateData: UpdateUserProfileDto,
     user: UserDocument,
-    res: Response,
-  ): Promise<void> {
+  ): Promise<UserDocument> {
     if (updateData.username) {
       const duplicateUsername = await this.userRepository.findByUsername(
         updateData.username,
@@ -48,12 +47,9 @@ export class UserService {
       }
     }
 
-    const updatedProfile = await this.userRepository.updateById(
+    return await this.userRepository.updateById(
       user._id.toHexString(),
       updateData,
     );
-    res.json(updatedProfile);
-
-    await this.locationRepository.updateLocationCreator(updatedProfile);
   }
 }
