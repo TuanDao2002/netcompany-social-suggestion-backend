@@ -1,5 +1,7 @@
 import {
   IsEnum,
+  IsLatitude,
+  IsLongitude,
   IsNumber,
   IsObject,
   IsOptional,
@@ -46,7 +48,16 @@ export class FilterLocationDto {
   weekend: Period;
 
   @IsOptional()
+  @IsLatitude()
+  latitude: number;
+
+  @IsOptional()
+  @IsLongitude()
+  longitude: number;
+
+  @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(SearchDistance.MIN_DISTANCE)
   @Max(SearchDistance.MAX_DISTANCE)
   searchDistance: number;

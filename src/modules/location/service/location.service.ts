@@ -210,10 +210,18 @@ export class LocationService {
     queryParams: FilterLocationDto,
     user: UserDocument,
   ) {
-    const { searchInput, locationCategory, weekday, weekend, searchDistance } =
-      queryParams;
+    const {
+      searchInput,
+      locationCategory,
+      weekday,
+      weekend,
+      searchDistance,
+      latitude,
+      longitude,
+    } = queryParams;
 
     let queryObject: any = {};
+    let locationQuery: any = {};
     if (searchInput) {
       const formattedSearchInput = Utils.removeSpace(
         searchInput.replace(/[^\p{L}\d\s]/giu, ''),
@@ -250,8 +258,21 @@ export class LocationService {
       queryObject.$and = periodQuery;
     }
 
+    if (latitude && longitude && searchDistance) {
+      locationQuery.$geoNear = {
+        near: {
+          type: 'Point',
+          coordinates: [longitude, latitude],
+        },
+        distanceField: "dist.calculated",
+        maxDistance: searchDistance * 1000,
+        spherical: true
+      };
+    }
+
     const filteredData = await this.locationRepository.filterLocation(
       queryObject,
+      locationQuery,
       next_cursor,
       user,
     );

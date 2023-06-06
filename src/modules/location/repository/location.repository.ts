@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Location, LocationDocument } from '../schema/locations.schema';
 import { CreateLocationDto } from '../dto/create-location.dto';
 import { UserDocument } from '../../user/schema/users.schema';
@@ -130,6 +130,7 @@ export class LocationRepository {
 
   public async filterLocation(
     queryObject: any,
+    locationQuery: any,
     next_cursor: string,
     user: UserDocument,
   ) {
@@ -139,22 +140,25 @@ export class LocationRepository {
         .split('_');
 
       const [heartCount, createdAt, _id] = decodedFromNextCursor;
+
+      // query object in aggregate must be casted manually
       queryObject.$or = [
-        { heartCount: { $lt: heartCount } },
+        { heartCount: { $lt: parseInt(heartCount, 10) } },
         {
-          heartCount: heartCount,
-          createdAt: { $lte: createdAt },
-          _id: { $lt: _id },
+          heartCount: parseInt(heartCount, 10),
+          createdAt: { $lte: new Date(createdAt) },
+          _id: { $lt: new mongoose.Types.ObjectId(_id) },
         },
       ];
     }
 
     const pipelineStage: any = [
-      {
-        $match: queryObject,
-      },
+      locationQuery,
       {
         $sort: { heartCount: -1, createdAt: -1, _id: -1 },
+      },
+      {
+        $match: queryObject,
       },
       {
         $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
@@ -162,7 +166,20 @@ export class LocationRepository {
     ];
     let results: any[] = await this.locationModel.aggregate(pipelineStage);
 
-    const count = await this.locationModel.count(queryObject);
+    const totalMatchResults = await this.locationModel.aggregate([
+      locationQuery,
+      {
+        $match: queryObject,
+      },
+      {
+        $group: {
+          _id: null,
+          numOfResults: { $sum: 1 },
+        },
+      },
+    ]);
+    const count = totalMatchResults[0]?.numOfResults || 0;
+    
     next_cursor = null;
     if (count > results.length) {
       const lastResult = results[results.length - 1];
