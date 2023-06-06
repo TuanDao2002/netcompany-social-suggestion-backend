@@ -209,7 +209,10 @@ export class LocationService {
     next_cursor: string,
     queryParams: FilterLocationDto,
     user: UserDocument,
-  ) {
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
     const {
       searchInput,
       locationCategory,
@@ -224,16 +227,12 @@ export class LocationService {
     let locationQuery: any = {};
     if (searchInput) {
       const formattedSearchInput = Utils.removeSpace(
-        searchInput.replace(/[^\p{L}\d\s]/giu, ''),
+        String(searchInput).replace(/[^\p{L}\d\s]/giu, ''),
       );
       if (formattedSearchInput) {
         const regexPattern = `.*${formattedSearchInput
           .split(' ')
           .join('.*')}.*`;
-        console.log(
-          '🚀 ~ file: location.service.ts:225 ~ LocationService ~ regexPattern:',
-          regexPattern,
-        );
         queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
       }
     }
@@ -264,15 +263,15 @@ export class LocationService {
           type: 'Point',
           coordinates: [longitude, latitude],
         },
-        distanceField: "dist.calculated",
+        distanceField: 'dist.calculated',
         maxDistance: searchDistance * 1000,
-        spherical: true
+        spherical: true,
       };
     }
 
     const filteredData = await this.locationRepository.filterLocation(
-      queryObject,
       locationQuery,
+      queryObject,
       next_cursor,
       user,
     );
@@ -280,7 +279,6 @@ export class LocationService {
     return {
       results: filteredData.results,
       next_cursor: filteredData.next_cursor,
-      queryParams,
     };
   }
 

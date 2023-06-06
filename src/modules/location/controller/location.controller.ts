@@ -63,7 +63,7 @@ export class LocationController {
     @Query('next_cursor') next_cursor: string,
     @CurrentUser() user: UserDocument,
   ): Promise<{
-    results: any;
+    results: any[];
     next_cursor: string;
   }> {
     return await this.locationService.viewCreatedLocation(next_cursor, user);
@@ -77,7 +77,7 @@ export class LocationController {
     @Query('longitude') longitude: number,
     @CurrentUser() user: UserDocument,
   ): Promise<{
-    results: any;
+    results: any[];
     next_cursor: string;
   }> {
     return await this.locationService.viewLatestLocation(
@@ -96,7 +96,7 @@ export class LocationController {
     @Query('longitude') longitude: number,
     @CurrentUser() user: UserDocument,
   ): Promise<{
-    results: any;
+    results: any[];
     next_cursor: string;
   }> {
     return await this.locationService.viewFeaturedLocation(
@@ -113,7 +113,10 @@ export class LocationController {
     @Query('next_cursor') next_cursor: string,
     @Query(QueryParamsTransformPipe) queryParams: FilterLocationDto,
     @CurrentUser() user: UserDocument,
-  ) {
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
     return await this.locationService.filterLocation(next_cursor, queryParams, user);
   }
 }

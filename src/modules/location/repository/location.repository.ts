@@ -70,7 +70,7 @@ export class LocationRepository {
     next_cursor: string,
     sortByHeartCount: boolean = false,
   ): Promise<{
-    results: any;
+    results: any[];
     next_cursor: string;
   }> {
     if (next_cursor) {
@@ -129,11 +129,14 @@ export class LocationRepository {
   }
 
   public async filterLocation(
-    queryObject: any,
     locationQuery: any,
+    queryObject: any,
     next_cursor: string,
     user: UserDocument,
-  ) {
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
     if (next_cursor) {
       const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
         .toString('ascii')
@@ -152,8 +155,7 @@ export class LocationRepository {
       ];
     }
 
-    const pipelineStage: any = [
-      locationQuery,
+    let filterPipelineStage: any[] = [
       {
         $sort: { heartCount: -1, createdAt: -1, _id: -1 },
       },
@@ -161,13 +163,28 @@ export class LocationRepository {
         $match: queryObject,
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
         $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },
+      {
+        $project: {
+          nameAddress: 0,
+          user: { isVerified: 0, locationCategories: 0, searchDistance: 0 },
+        },
+      },
     ];
-    let results: any[] = await this.locationModel.aggregate(pipelineStage);
 
-    const totalMatchResults = await this.locationModel.aggregate([
-      locationQuery,
+    let countPipelineStage: any[] = [
       {
         $match: queryObject,
       },
@@ -177,9 +194,22 @@ export class LocationRepository {
           numOfResults: { $sum: 1 },
         },
       },
-    ]);
+    ];
+
+    if (Object.keys(locationQuery).length > 0) {
+      filterPipelineStage.unshift(locationQuery);
+      countPipelineStage.unshift(locationQuery);
+    }
+
+    let results: any[] = await this.locationModel.aggregate(
+      filterPipelineStage,
+    );
+
+    const totalMatchResults = await this.locationModel.aggregate(
+      countPipelineStage,
+    );
     const count = totalMatchResults[0]?.numOfResults || 0;
-    
+
     next_cursor = null;
     if (count > results.length) {
       const lastResult = results[results.length - 1];
