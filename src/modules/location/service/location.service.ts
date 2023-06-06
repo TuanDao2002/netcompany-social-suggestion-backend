@@ -145,11 +145,14 @@ export class LocationService {
       );
     }
 
+    let queryObject: any = {};
     const { locationCategories, searchDistance } = user;
+    if (locationCategories.length > 0) {
+      queryObject.locationCategory = { $in: locationCategories };
+    }
 
-    const queryObject = {
-      locationCategory: { $in: locationCategories },
-      location: {
+    if (searchDistance > 0) {
+      queryObject.location = {
         $near: {
           $geometry: {
             type: 'Point',
@@ -157,8 +160,9 @@ export class LocationService {
           },
           $maxDistance: searchDistance * 1000,
         },
-      },
-    };
+      };
+    }
+
     return await this.locationRepository.viewLocations(
       queryObject,
       next_cursor,
@@ -184,11 +188,14 @@ export class LocationService {
       );
     }
 
+    let queryObject: any = {};
     const { locationCategories, searchDistance } = user;
+    if (locationCategories.length > 0) {
+      queryObject.locationCategory = { $in: locationCategories };
+    }
 
-    const queryObject = {
-      locationCategory: { $in: locationCategories },
-      location: {
+    if (searchDistance > 0) {
+      queryObject.location = {
         $near: {
           $geometry: {
             type: 'Point',
@@ -196,8 +203,9 @@ export class LocationService {
           },
           $maxDistance: searchDistance * 1000,
         },
-      },
-    };
+      };
+    }
+
     return await this.locationRepository.viewLocations(
       queryObject,
       next_cursor,
