@@ -73,13 +73,13 @@ export class LocationController {
   @Get('latest')
   async viewLatestLocation(
     @Query('next_cursor') next_cursor: string,
-    @Query('latitude') latitude: number,
-    @Query('longitude') longitude: number,
+    @Query(QueryParamsTransformPipe) queryParams: FilterLocationDto,
     @CurrentUser() user: UserDocument,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
+    const {latitude, longitude} = queryParams;
     return await this.locationService.viewLatestLocation(
       next_cursor,
       latitude,
@@ -92,13 +92,13 @@ export class LocationController {
   @Get('featured')
   async viewFeaturedLocation(
     @Query('next_cursor') next_cursor: string,
-    @Query('latitude') latitude: number,
-    @Query('longitude') longitude: number,
+    @Query(QueryParamsTransformPipe) queryParams: FilterLocationDto,
     @CurrentUser() user: UserDocument,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
+    const {latitude, longitude} = queryParams;
     return await this.locationService.viewFeaturedLocation(
       next_cursor,
       latitude,
