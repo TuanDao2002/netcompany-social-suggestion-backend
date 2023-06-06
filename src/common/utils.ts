@@ -1,4 +1,4 @@
-import { isNumberString } from "class-validator";
+import { isNumberString } from 'class-validator';
 import {
   Period,
   PricePerPerson,
@@ -6,7 +6,16 @@ import {
 
 export class Utils {
   public static validatePeriod(period: Period) {
-    return period.openTime < period.closeTime;
+    const { openTime, closeTime } = period;
+    return (
+      openTime &&
+      closeTime &&
+      openTime < closeTime &&
+      openTime >= '0000' &&
+      openTime <= '2359' &&
+      closeTime >= '0000' &&
+      closeTime <= '2359'
+    );
   }
 
   public static validatePriceRange(priceRange: PricePerPerson) {

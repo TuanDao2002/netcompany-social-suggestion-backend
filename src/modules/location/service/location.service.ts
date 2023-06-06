@@ -209,30 +209,77 @@ export class LocationService {
     next_cursor: string,
     queryParams: FilterLocationDto,
     user: UserDocument,
-  ) {
-    const { searchInput, locationCategory, weekday, weekend, searchDistance } =
-      queryParams;
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    const {
+      searchInput,
+      locationCategory,
+      weekday,
+      weekend,
+      searchDistance,
+      latitude,
+      longitude,
+    } = queryParams;
 
     let queryObject: any = {};
-    const formattedSearchInput = Utils.removeSpace(
-      searchInput.replace(/[^a-z0-9 ]/gi, ''),
-    );
-    if (formattedSearchInput) {
-      const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
-      queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
+    let locationQuery: any = {};
+    if (searchInput) {
+      const formattedSearchInput = Utils.removeSpace(
+        String(searchInput).replace(/[^\p{L}\d\s]/giu, ''),
+      );
+      if (formattedSearchInput) {
+        const regexPattern = `.*${formattedSearchInput
+          .split(' ')
+          .join('.*')}.*`;
+        queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
+      }
     }
 
     if (locationCategory) {
       queryObject.locationCategory = locationCategory;
     }
 
-    const results = await this.locationRepository.filterLocation(
+    let periodQuery: any[] = [];
+
+    if (weekday) {
+      periodQuery.push({ 'weekday.openTime': { $gte: weekday.openTime } });
+      periodQuery.push({ 'weekday.closeTime': { $lte: weekday.closeTime } });
+    }
+
+    if (weekend) {
+      periodQuery.push({ 'weekend.openTime': { $gte: weekend.openTime } });
+      periodQuery.push({ 'weekend.closeTime': { $lte: weekend.closeTime } });
+    }
+
+    if (periodQuery.length > 0) {
+      queryObject.$and = periodQuery;
+    }
+
+    if (latitude && longitude && searchDistance) {
+      locationQuery.$geoNear = {
+        near: {
+          type: 'Point',
+          coordinates: [longitude, latitude],
+        },
+        distanceField: 'dist.calculated',
+        maxDistance: searchDistance * 1000,
+        spherical: true,
+      };
+    }
+
+    const filteredData = await this.locationRepository.filterLocation(
+      locationQuery,
       queryObject,
       next_cursor,
       user,
     );
 
-    return { results, queryParams };
+    return {
+      results: filteredData.results,
+      next_cursor: filteredData.next_cursor,
+    };
   }
 
   public isOwner(

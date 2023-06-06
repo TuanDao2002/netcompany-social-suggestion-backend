@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Location, LocationDocument } from '../schema/locations.schema';
 import { CreateLocationDto } from '../dto/create-location.dto';
 import { UserDocument } from '../../user/schema/users.schema';
@@ -20,7 +20,7 @@ export class LocationRepository {
     const createdLocation = new this.locationModel({
       ...createLocationDto,
       userId: user._id,
-      nameAddress: `${createLocationDto.name} ${createLocationDto.address}`
+      nameAddress: `${createLocationDto.name} ${createLocationDto.address}`,
     });
     return createdLocation.save();
   }
@@ -36,7 +36,10 @@ export class LocationRepository {
       {
         _id: updateLocationData.locationId,
       },
-      updateLocationData,
+      {
+        updateLocationData,
+        nameAddress: `${updateLocationData.name} ${updateLocationData.address}`,
+      },
       { new: true },
     );
   }
@@ -67,7 +70,7 @@ export class LocationRepository {
     next_cursor: string,
     sortByHeartCount: boolean = false,
   ): Promise<{
-    results: any;
+    results: any[];
     next_cursor: string;
   }> {
     if (next_cursor) {
@@ -126,42 +129,87 @@ export class LocationRepository {
   }
 
   public async filterLocation(
+    locationQuery: any,
     queryObject: any,
     next_cursor: string,
     user: UserDocument,
-  ) {
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
     if (next_cursor) {
       const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
         .toString('ascii')
         .split('_');
 
       const [heartCount, createdAt, _id] = decodedFromNextCursor;
+
+      // query object in aggregate must be casted manually
       queryObject.$or = [
-        { heartCount: { $lt: heartCount } },
+        { heartCount: { $lt: parseInt(heartCount, 10) } },
         {
-          heartCount: heartCount,
-          createdAt: { $lte: createdAt },
-          _id: { $lt: _id },
+          heartCount: parseInt(heartCount, 10),
+          createdAt: { $lte: new Date(createdAt) },
+          _id: { $lt: new mongoose.Types.ObjectId(_id) },
         },
       ];
     }
 
-    const pipelineStage: any = [
+    let filterPipelineStage: any[] = [
       {
         $sort: { heartCount: -1, createdAt: -1, _id: -1 },
       },
-
       {
         $match: queryObject,
       },
-
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
       {
         $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },
+      {
+        $project: {
+          nameAddress: 0,
+          user: { isVerified: 0, locationCategories: 0, searchDistance: 0 },
+        },
+      },
     ];
-    let results: any[] = await this.locationModel.aggregate(pipelineStage);
 
-    const count = await this.locationModel.count(queryObject);
+    let countPipelineStage: any[] = [
+      {
+        $match: queryObject,
+      },
+      {
+        $group: {
+          _id: null,
+          numOfResults: { $sum: 1 },
+        },
+      },
+    ];
+
+    if (Object.keys(locationQuery).length > 0) {
+      filterPipelineStage.unshift(locationQuery);
+      countPipelineStage.unshift(locationQuery);
+    }
+
+    let results: any[] = await this.locationModel.aggregate(
+      filterPipelineStage,
+    );
+
+    const totalMatchResults = await this.locationModel.aggregate(
+      countPipelineStage,
+    );
+    const count = totalMatchResults[0]?.numOfResults || 0;
+
     next_cursor = null;
     if (count > results.length) {
       const lastResult = results[results.length - 1];

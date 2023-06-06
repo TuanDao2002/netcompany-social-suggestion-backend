@@ -103,7 +103,7 @@ export class CreateLocationDto {
   @ValidateNested()
   @Type(() => Period)
   @IsValidPeriod({
-    message: 'The opening time must be before the closing time on weekday',
+    message: 'The opening time and closing time on weekday must be valid',
   })
   weekday: Period;
 
@@ -111,7 +111,7 @@ export class CreateLocationDto {
   @ValidateNested()
   @Type(() => Period)
   @IsValidPeriod({
-    message: 'The opening time must be before the closing time on weekend',
+    message: 'The opening time and closing time on weekend must be valid',
   })
   weekend: Period;
 }
