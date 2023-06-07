@@ -222,6 +222,10 @@ export class LocationService {
     results: any[];
     next_cursor: string;
   }> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
     const {
       searchInput,
       locationCategory,
@@ -291,9 +295,17 @@ export class LocationService {
     };
   }
 
-  public async viewDetailLocation(locationId: string): Promise<any> {
+  public async viewDetailLocation(
+    locationId: string,
+    user: UserDocument,
+  ): Promise<any> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+    
     const findLocation = await this.locationRepository.findDetailLocation(
       locationId,
+      user
     );
     if (findLocation.length === 0) {
       throw new NotFoundException('This location does not exist');

@@ -74,7 +74,7 @@ export class LikeLocationRepository {
 
     let likedLocations = this.likeLocationModel
       .find(queryObject)
-      .populate('locationId')
+      .populate('locationId', '_id name address imageUrls heartCount createdAt')
       .select('-userId');
     likedLocations = likedLocations.sort('-createdAt -_id');
     likedLocations = likedLocations.limit(

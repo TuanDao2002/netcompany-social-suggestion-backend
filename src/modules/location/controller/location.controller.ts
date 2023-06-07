@@ -131,8 +131,11 @@ export class LocationController {
 
   @HttpCode(HttpStatus.OK)
   @Get('detail/:id')
-  async viewDetailLocation(@Param('id') locationId: string): Promise<any> {
-    return await this.locationService.viewDetailLocation(locationId);
+  async viewDetailLocation(
+    @Param('id') locationId: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<any> {
+    return await this.locationService.viewDetailLocation(locationId, user);
   }
 
   @HttpCode(HttpStatus.OK)
