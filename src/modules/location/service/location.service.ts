@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { LocationRepository } from '../repository/location.repository';
@@ -288,6 +289,17 @@ export class LocationService {
       results: filteredData.results,
       next_cursor: filteredData.next_cursor,
     };
+  }
+
+  public async viewDetailLocation(locationId: string): Promise<any> {
+    const findLocation = await this.locationRepository.findDetailLocation(
+      locationId,
+    );
+    if (findLocation.length === 0) {
+      throw new NotFoundException('This location does not exist');
+    }
+
+    return findLocation[0];
   }
 
   public isOwner(

@@ -227,4 +227,32 @@ export class LocationRepository {
       next_cursor,
     };
   }
+
+  public async findDetailLocation(locationId: string): Promise<any[]> {
+    return await this.locationModel.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(locationId) },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
+        $limit: 1,
+      },
+      {
+        $project: {
+          nameAddress: 0,
+          user: { isVerified: 0, locationCategories: 0, searchDistance: 0 },
+        },
+      },
+    ]);
+  }
 }

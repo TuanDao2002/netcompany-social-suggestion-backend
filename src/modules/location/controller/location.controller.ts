@@ -21,7 +21,7 @@ import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateLocationDto } from '../dto/update-location.dto';
 import { Response } from 'express';
 import { FilterLocationDto } from '../dto/filter-location.dto';
-import { QueryParamsTransformPipe } from "../../../common/parse-query.pipe";
+import { QueryParamsTransformPipe } from '../../../common/parse-query.pipe';
 
 @Controller('location')
 @UseGuards(JwtGuard)
@@ -79,7 +79,7 @@ export class LocationController {
     results: any[];
     next_cursor: string;
   }> {
-    const {latitude, longitude} = queryParams;
+    const { latitude, longitude } = queryParams;
     return await this.locationService.viewLatestLocation(
       next_cursor,
       latitude,
@@ -98,7 +98,7 @@ export class LocationController {
     results: any[];
     next_cursor: string;
   }> {
-    const {latitude, longitude} = queryParams;
+    const { latitude, longitude } = queryParams;
     return await this.locationService.viewFeaturedLocation(
       next_cursor,
       latitude,
@@ -117,6 +117,19 @@ export class LocationController {
     results: any[];
     next_cursor: string;
   }> {
-    return await this.locationService.filterLocation(next_cursor, queryParams, user);
+    return await this.locationService.filterLocation(
+      next_cursor,
+      queryParams,
+      user,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('detail/:id')
+  async viewDetailLocation(
+    @Param('id') locationId: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<any> {
+    return await this.locationService.viewDetailLocation(locationId);
   }
 }
