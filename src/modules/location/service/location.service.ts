@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { LocationRepository } from '../repository/location.repository';
@@ -221,6 +222,10 @@ export class LocationService {
     results: any[];
     next_cursor: string;
   }> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
     const {
       searchInput,
       locationCategory,
@@ -288,6 +293,25 @@ export class LocationService {
       results: filteredData.results,
       next_cursor: filteredData.next_cursor,
     };
+  }
+
+  public async viewDetailLocation(
+    locationId: string,
+    user: UserDocument,
+  ): Promise<any> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+    
+    const findLocation = await this.locationRepository.findDetailLocation(
+      locationId,
+      user
+    );
+    if (findLocation.length === 0) {
+      throw new NotFoundException('This location does not exist');
+    }
+
+    return findLocation[0];
   }
 
   public isOwner(

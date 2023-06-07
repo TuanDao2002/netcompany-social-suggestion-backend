@@ -177,9 +177,39 @@ export class LocationRepository {
         $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },
       {
+        $lookup: {
+          from: 'likelocations',
+          let: { locationId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  // use this operator to compare 2 fields in the same joined collections
+                  $and: [
+                    { $eq: ['$locationId', '$$locationId'] },
+                    {
+                      $eq: ['$userId', user._id],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'likes',
+        },
+      },
+      {
+        $addFields: {
+          likedByUser: {
+            $cond: [{ $gt: [{ $size: '$likes' }, 0] }, true, false],
+          },
+        },
+      },
+      {
         $project: {
           nameAddress: 0,
           user: { isVerified: 0, locationCategories: 0, searchDistance: 0 },
+          likes: 0,
         },
       },
     ];
@@ -226,5 +256,66 @@ export class LocationRepository {
       results,
       next_cursor,
     };
+  }
+
+  public async findDetailLocation(
+    locationId: string,
+    user: UserDocument,
+  ): Promise<any[]> {
+    return await this.locationModel.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(locationId) },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
+        $limit: 1,
+      },
+      {
+        $lookup: {
+          from: 'likelocations',
+          let: { locationId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  // use this operator to compare 2 fields in the same joined collections
+                  $and: [
+                    { $eq: ['$locationId', '$$locationId'] },
+                    {
+                      $eq: ['$userId', user._id],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'likes',
+        },
+      },
+      {
+        $addFields: {
+          likedByUser: {
+            $cond: [{ $gt: [{ $size: '$likes' }, 0] }, true, false],
+          },
+        },
+      },
+      {
+        $project: {
+          nameAddress: 0,
+          user: { isVerified: 0, locationCategories: 0, searchDistance: 0 },
+          likes: 0,
+        },
+      },
+    ]);
   }
 }
