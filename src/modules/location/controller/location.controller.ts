@@ -22,11 +22,16 @@ import { UpdateLocationDto } from '../dto/update-location.dto';
 import { Response } from 'express';
 import { FilterLocationDto } from '../dto/filter-location.dto';
 import { QueryParamsTransformPipe } from '../../../common/parse-query.pipe';
+import { LikeLocationService } from '../service/like-location.service';
+import { LikeLocation } from '../schema/like-location.schema';
 
 @Controller('location')
 @UseGuards(JwtGuard)
 export class LocationController {
-  constructor(private readonly locationService: LocationService) {}
+  constructor(
+    private readonly locationService: LocationService,
+    private readonly likeLocationService: LikeLocationService,
+  ) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('')
@@ -131,5 +136,25 @@ export class LocationController {
     @CurrentUser() user: UserDocument,
   ): Promise<any> {
     return await this.locationService.viewDetailLocation(locationId);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('like/:id')
+  async likeLocation(
+    @Param('id') locationId: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<LikeLocation> {
+    return await this.likeLocationService.likeLocation(locationId, user);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete('like/:id')
+  async unlikeLocation(
+    @Param('id') locationId: string,
+    @CurrentUser() user: UserDocument,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.likeLocationService.unlikeLocation(locationId, user);
+    res.json({ msg: 'You unliked this location' });
   }
 }
