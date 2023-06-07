@@ -131,10 +131,7 @@ export class LocationController {
 
   @HttpCode(HttpStatus.OK)
   @Get('detail/:id')
-  async viewDetailLocation(
-    @Param('id') locationId: string,
-    @CurrentUser() user: UserDocument,
-  ): Promise<any> {
+  async viewDetailLocation(@Param('id') locationId: string): Promise<any> {
     return await this.locationService.viewDetailLocation(locationId);
   }
 
@@ -156,5 +153,17 @@ export class LocationController {
   ): Promise<void> {
     await this.likeLocationService.unlikeLocation(locationId, user);
     res.json({ msg: 'You unliked this location' });
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('liked/me')
+  async viewLikedLocation(
+    @Query('next_cursor') next_cursor: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    return await this.likeLocationService.viewLikedLocation(next_cursor, user);
   }
 }

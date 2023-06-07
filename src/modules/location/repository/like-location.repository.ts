@@ -7,6 +7,7 @@ import {
 import { Model } from 'mongoose';
 import { UserDocument } from '../../user/schema/users.schema';
 import { Location, LocationDocument } from '../schema/locations.schema';
+import { CommonConstant } from '../../../common/constant';
 
 @Injectable()
 export class LikeLocationRepository {
@@ -17,6 +18,16 @@ export class LikeLocationRepository {
     @InjectModel(Location.name)
     private locationModel: Model<LocationDocument>,
   ) {}
+
+  public async findLike(
+    user: UserDocument,
+    locationId: string,
+  ): Promise<LikeLocation> {
+    return await this.likeLocationModel.findOne({
+      userId: user._id,
+      locationId,
+    });
+  }
 
   public async create(
     user: UserDocument,
@@ -33,16 +44,6 @@ export class LikeLocationRepository {
     return createdLike.save();
   }
 
-  public async findLike(
-    user: UserDocument,
-    locationId: string,
-  ): Promise<LikeLocation> {
-    return await this.likeLocationModel.findOne({
-      userId: user._id,
-      locationId,
-    });
-  }
-
   public async delete(user: UserDocument, locationId: string): Promise<void> {
     await this.locationModel.updateOne(
       { _id: locationId },
@@ -52,5 +53,49 @@ export class LikeLocationRepository {
       userId: user._id,
       locationId,
     });
+  }
+
+  public async findLikedLocationsByUser(
+    queryObject: any,
+    next_cursor: string,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    if (next_cursor) {
+      const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
+        .toString('ascii')
+        .split('_');
+
+      const [createdAt, _id] = decodedFromNextCursor;
+      queryObject.createdAt = { $lte: createdAt };
+      queryObject._id = { $lt: _id };
+    }
+
+    let likedLocations = this.likeLocationModel
+      .find(queryObject)
+      .populate('locationId')
+      .select('-userId');
+    likedLocations = likedLocations.sort('-createdAt -_id');
+    likedLocations = likedLocations.limit(
+      CommonConstant.LOCATION_PAGINATION_LIMIT,
+    );
+
+    let results: any[] = await likedLocations;
+    results = results.map((res) => res.locationId);
+
+    const count = await this.likeLocationModel.count(queryObject);
+    next_cursor = null;
+    if (count > results.length) {
+      const lastResult = results[results.length - 1];
+      next_cursor = Buffer.from(
+        lastResult.createdAt.toISOString() + '_' + lastResult._id,
+      ).toString('base64');
+    }
+
+    return {
+      results,
+      next_cursor,
+    };
   }
 }
