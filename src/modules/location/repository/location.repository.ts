@@ -163,6 +163,9 @@ export class LocationRepository {
         $match: queryObject,
       },
       {
+        $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
+      },
+      {
         $lookup: {
           from: 'users',
           localField: 'userId',
@@ -172,9 +175,6 @@ export class LocationRepository {
       },
       {
         $unwind: '$user',
-      },
-      {
-        $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },
       {
         $lookup: {
@@ -200,27 +200,6 @@ export class LocationRepository {
       },
       {
         $addFields: {
-          tempFieldConvert: {
-            $toInt: '$weekday.closeTime', // Convert string to integer
-          },
-        },
-      },
-      {
-        $addFields: {
-          tempFieldAdd: {
-            $add: ['$tempFieldConvert', 2400],
-          },
-        },
-      },
-      {
-        $addFields: {
-          formatWeekdayCloseTime: {
-            $cond: [
-              { $lte: ['$weekday.closeTime', '$weekday.openTime'] },
-              { $toString: '$tempFieldAdd' },
-              '$weekday.closeTime',
-            ],
-          },
           likedByUser: {
             $cond: [{ $gt: [{ $size: '$likes' }, 0] }, true, false],
           },

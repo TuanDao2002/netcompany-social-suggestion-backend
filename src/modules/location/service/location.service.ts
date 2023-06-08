@@ -256,14 +256,154 @@ export class LocationService {
 
     let periodQuery: any[] = [];
 
-    if (weekday) {
-      periodQuery.push({ 'weekday.openTime': { $gte: weekday.openTime } });
-      periodQuery.push({ 'weekday.closeTime': { $gte: weekday.closeTime } });
+    if (weekday && weekday.openTime && weekday.closeTime) {
+      if (weekday.openTime === weekday.closeTime) {
+        periodQuery.push({
+          $expr: { $eq: ['$weekday.openTime', '$weekday.closeTime'] },
+        });
+      } else {
+        const withinDay = weekday.openTime < weekday.closeTime;
+        if (withinDay) {
+          periodQuery.push({
+            $or: [
+              {
+                $and: [
+                  {
+                    $expr: {
+                      $lte: ['$weekday.openTime', '$weekday.closeTime'],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $lte: ['$weekday.openTime', weekday.openTime],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $gte: ['$weekday.closeTime', weekday.closeTime],
+                    },
+                  },
+                ],
+              },
+              {
+                $and: [
+                  {
+                    $expr: {
+                      $gte: ['$weekday.openTime', '$weekday.closeTime'],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $lte: ['$weekday.openTime', weekday.openTime],
+                    },
+                  },
+                ],
+              },
+              { $expr: { $eq: ['$weekday.openTime', '$weekday.closeTime'] } },
+            ],
+          });
+        } else {
+          periodQuery.push({
+            $or: [
+              {
+                $and: [
+                  {
+                    $expr: {
+                      $gte: ['$weekday.openTime', '$weekday.closeTime'],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $lte: ['$weekday.openTime', weekday.openTime],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $gte: ['$weekday.closeTime', weekday.closeTime],
+                    },
+                  },
+                ],
+              },
+              { $expr: { $eq: ['$weekday.openTime', '$weekday.closeTime'] } },
+            ],
+          });
+        }
+      }
     }
 
-    if (weekend) {
-      periodQuery.push({ 'weekend.openTime': { $gte: weekend.openTime } });
-      periodQuery.push({ 'weekend.closeTime': { $gte: weekend.closeTime } });
+    if (weekend && weekend.openTime && weekend.closeTime) {
+      if (weekend.openTime === weekend.closeTime) {
+        periodQuery.push({
+          $expr: { $eq: ['$weekend.openTime', '$weekend.closeTime'] },
+        });
+      } else {
+        const withinDay = weekend.openTime < weekend.closeTime;
+        if (withinDay) {
+          periodQuery.push({
+            $or: [
+              {
+                $and: [
+                  {
+                    $expr: {
+                      $lte: ['$weekend.openTime', '$weekend.closeTime'],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $lte: ['$weekend.openTime', weekend.openTime],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $gte: ['$weekend.closeTime', weekend.closeTime],
+                    },
+                  },
+                ],
+              },
+              {
+                $and: [
+                  {
+                    $expr: {
+                      $gte: ['$weekend.openTime', '$weekend.closeTime'],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $lte: ['$weekend.openTime', weekend.openTime],
+                    },
+                  },
+                ],
+              },
+              { $expr: { $eq: ['$weekend.openTime', '$weekend.closeTime'] } },
+            ],
+          });
+        } else {
+          periodQuery.push({
+            $or: [
+              {
+                $and: [
+                  {
+                    $expr: {
+                      $gte: ['$weekend.openTime', '$weekend.closeTime'],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $lte: ['$weekend.openTime', weekend.openTime],
+                    },
+                  },
+                  {
+                    $expr: {
+                      $gte: ['$weekend.closeTime', weekend.closeTime],
+                    },
+                  },
+                ],
+              },
+              { $expr: { $eq: ['$weekend.openTime', '$weekend.closeTime'] } },
+            ],
+          });
+        }
+      }
     }
 
     if (periodQuery.length > 0) {
