@@ -14,7 +14,6 @@ import {
 import { LocationCategory } from '../../../common/location-category.enum';
 import { Type } from 'class-transformer';
 import { Period } from './create-location.dto';
-import { IsValidPeriod } from '../../../common/validator';
 import { SearchDistance } from '../../../common/search-distance.enum';
 
 export class FilterLocationDto {
@@ -33,18 +32,12 @@ export class FilterLocationDto {
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
-  @IsValidPeriod({
-    message: 'The opening time and closing time on weekday must be valid',
-  })
   weekday: Period;
 
   @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
-  @IsValidPeriod({
-    message: 'The opening time and closing time on weekend must be valid',
-  })
   weekend: Period;
 
   @IsOptional()

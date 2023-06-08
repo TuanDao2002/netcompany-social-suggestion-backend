@@ -163,6 +163,9 @@ export class LocationRepository {
         $match: queryObject,
       },
       {
+        $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
+      },
+      {
         $lookup: {
           from: 'users',
           localField: 'userId',
@@ -172,9 +175,6 @@ export class LocationRepository {
       },
       {
         $unwind: '$user',
-      },
-      {
-        $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },
       {
         $lookup: {

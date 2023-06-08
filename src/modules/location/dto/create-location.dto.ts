@@ -18,7 +18,6 @@ import { CommonConstant } from '../../../common/constant';
 import { Currency } from '../../../common/currency.enum';
 import {
   IsNotBlank,
-  IsValidPeriod,
   IsValidPriceRange,
 } from '../../../common/validator';
 
@@ -77,13 +76,12 @@ export class CreateLocationDto {
   @Type(() => Location)
   location: Location;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @IsNotBlank({ message: 'description must not contain only whitespaces' })
   description: string;
 
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @IsString({ each: true })
   imageUrls: [string];
 
@@ -102,16 +100,10 @@ export class CreateLocationDto {
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
-  @IsValidPeriod({
-    message: 'The opening time and closing time on weekday must be valid',
-  })
   weekday: Period;
 
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
-  @IsValidPeriod({
-    message: 'The opening time and closing time on weekend must be valid',
-  })
   weekend: Period;
 }

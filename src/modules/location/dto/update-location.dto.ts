@@ -12,7 +12,6 @@ import {
 import { LocationCategory } from '../../../common/location-category.enum';
 import {
   IsNotBlank,
-  IsValidPeriod,
   IsValidPriceRange,
 } from '../../../common/validator';
 import { Location, Period, PricePerPerson } from './create-location.dto';
@@ -45,14 +44,11 @@ export class UpdateLocationDto {
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @IsNotBlank({ message: 'description must not contain only whitespaces' })
   description: string;
 
   @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
-  @IsString({ each: true })
+  @ArrayMinSize(0)
   imageUrls: [string];
 
   @IsOptional()
@@ -72,17 +68,11 @@ export class UpdateLocationDto {
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
-  @IsValidPeriod({
-    message: 'The opening time must be before the closing time on weekday',
-  })
   weekday: Period;
 
   @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => Period)
-  @IsValidPeriod({
-    message: 'The opening time must be before the closing time on weekend',
-  })
   weekend: Period;
 }
