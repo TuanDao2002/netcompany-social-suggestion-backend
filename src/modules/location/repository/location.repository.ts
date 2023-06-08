@@ -37,7 +37,7 @@ export class LocationRepository {
         _id: updateLocationData.locationId,
       },
       {
-        updateLocationData,
+        ...updateLocationData,
         nameAddress: `${updateLocationData.name} ${updateLocationData.address}`,
       },
       { new: true },

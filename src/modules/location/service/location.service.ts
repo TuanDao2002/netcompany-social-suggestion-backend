@@ -257,6 +257,14 @@ export class LocationService {
     let periodQuery: any[] = [];
 
     if (weekday && weekday.openTime && weekday.closeTime) {
+      if (weekday.openTime === '0000') {
+        weekday.openTime = '2400';
+      }
+
+      if (weekday.closeTime === '0000') {
+        weekday.closeTime = '2400';
+      }
+
       if (weekday.openTime === weekday.closeTime) {
         periodQuery.push({
           $expr: { $eq: ['$weekday.openTime', '$weekday.closeTime'] },
@@ -293,9 +301,18 @@ export class LocationService {
                     },
                   },
                   {
-                    $expr: {
-                      $lte: ['$weekday.openTime', weekday.openTime],
-                    },
+                    $or: [
+                      {
+                        $expr: {
+                          $lte: ['$weekday.openTime', weekday.openTime],
+                        },
+                      },
+                      {
+                        $expr: {
+                          $gte: ['$weekday.closeTime', weekday.closeTime],
+                        },
+                      },
+                    ],
                   },
                 ],
               },
@@ -332,6 +349,14 @@ export class LocationService {
     }
 
     if (weekend && weekend.openTime && weekend.closeTime) {
+      if (weekend.openTime === '0000') {
+        weekend.openTime = '2400';
+      }
+
+      if (weekend.closeTime === '0000') {
+        weekend.closeTime = '2400';
+      }
+
       if (weekend.openTime === weekend.closeTime) {
         periodQuery.push({
           $expr: { $eq: ['$weekend.openTime', '$weekend.closeTime'] },
@@ -368,9 +393,18 @@ export class LocationService {
                     },
                   },
                   {
-                    $expr: {
-                      $lte: ['$weekend.openTime', weekend.openTime],
-                    },
+                    $or: [
+                      {
+                        $expr: {
+                          $lte: ['$weekend.openTime', weekend.openTime],
+                        },
+                      },
+                      {
+                        $expr: {
+                          $gte: ['$weekend.closeTime', weekend.closeTime],
+                        },
+                      },
+                    ],
                   },
                 ],
               },
