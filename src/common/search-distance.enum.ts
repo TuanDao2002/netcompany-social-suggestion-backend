@@ -1,4 +1,4 @@
-export let SearchDistance = {
-  MIN_DISTANCE: 5,
-  MAX_DISTANCE: 100,
-};
+export enum SearchDistance {
+  MIN_DISTANCE = Number(process.env.MIN_DISTANCE),
+  MAX_DISTANCE = Number(process.env.MAX_DISTANCE),
+}
