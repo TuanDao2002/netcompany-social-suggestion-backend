@@ -50,7 +50,7 @@ export class Location {
   };
 
   @Prop({
-    required: true,
+    required: false,
     trim: true,
   })
   description: string;

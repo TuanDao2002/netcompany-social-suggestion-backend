@@ -4,12 +4,14 @@ import {
   IsArray,
   IsEnum,
   IsNumber,
-  IsPositive,
   IsString,
+  Max,
+  Min,
   NotEquals,
   ValidateIf,
 } from 'class-validator';
 import { LocationCategory } from '../../../common/location-category.enum';
+import { SearchDistance } from "../../../common/search-distance.enum";
 
 export class UpdateUserProfileDto {
   @IsString()
@@ -33,6 +35,7 @@ export class UpdateUserProfileDto {
   @IsNumber()
   @NotEquals(null)
   @ValidateIf((object, value) => value !== undefined)
-  @IsPositive()
+  @Min(SearchDistance.MIN_DISTANCE)
+  @Max(SearchDistance.MAX_DISTANCE)
   searchDistance: number;
 }

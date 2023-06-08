@@ -258,12 +258,12 @@ export class LocationService {
 
     if (weekday) {
       periodQuery.push({ 'weekday.openTime': { $gte: weekday.openTime } });
-      periodQuery.push({ 'weekday.closeTime': { $lte: weekday.closeTime } });
+      periodQuery.push({ 'weekday.closeTime': { $gte: weekday.closeTime } });
     }
 
     if (weekend) {
       periodQuery.push({ 'weekend.openTime': { $gte: weekend.openTime } });
-      periodQuery.push({ 'weekend.closeTime': { $lte: weekend.closeTime } });
+      periodQuery.push({ 'weekend.closeTime': { $gte: weekend.closeTime } });
     }
 
     if (periodQuery.length > 0) {
@@ -302,10 +302,10 @@ export class LocationService {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
     }
-    
+
     const findLocation = await this.locationRepository.findDetailLocation(
       locationId,
-      user
+      user,
     );
     if (findLocation.length === 0) {
       throw new NotFoundException('This location does not exist');
