@@ -82,7 +82,6 @@ export class LikeLocationRepository {
     );
 
     let results: any[] = await likedLocations;
-    results = results.map((res) => res.locationId);
 
     const count = await this.likeLocationModel.count(queryObject);
     next_cursor = null;
@@ -92,6 +91,8 @@ export class LikeLocationRepository {
         lastResult.createdAt.toISOString() + '_' + lastResult._id,
       ).toString('base64');
     }
+    
+    results = results.map((res) => res.locationId);
 
     return {
       results,
