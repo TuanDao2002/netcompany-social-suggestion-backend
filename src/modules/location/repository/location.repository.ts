@@ -174,7 +174,10 @@ export class LocationRepository {
         },
       },
       {
-        $unwind: '$user',
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
@@ -275,7 +278,10 @@ export class LocationRepository {
         },
       },
       {
-        $unwind: '$user',
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $limit: 1,
