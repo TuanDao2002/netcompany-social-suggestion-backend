@@ -130,6 +130,35 @@ export class LocationService {
     );
   }
 
+  public async searchLocationByInput(
+    input: string,
+    next_cursor: string,
+    user: UserDocument,
+  ): Promise<{
+    results: any;
+    next_cursor: string;
+  }> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
+    let queryObject: any = {};
+    const formattedSearchInput = Utils.removeSpace(
+      String(input).replace(/[^\p{L}\d\s]/giu, ''),
+    );
+    if (formattedSearchInput) {
+      const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
+      queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
+    }
+    
+    return await this.locationRepository.filterLocation(
+      LocationSortingType.LATEST,
+      {},
+      queryObject,
+      next_cursor,
+    );
+  }
+
   public async filterLocation(
     sortType: LocationSortingType,
     next_cursor: string,

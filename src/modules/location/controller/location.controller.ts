@@ -95,6 +95,23 @@ export class LocationController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @Get('search/:input')
+  async searchLocationByInput(
+    @Query('next_cursor') next_cursor: string,
+    @Param('input') input: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    return await this.locationService.searchLocationByInput(
+      input,
+      next_cursor,
+      user,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
   @Get('detail/:id')
   async viewDetailLocation(
     @Param('id') locationId: string,
@@ -125,13 +142,16 @@ export class LocationController {
 
   @HttpCode(HttpStatus.OK)
   @Get('liked/me')
-  async viewLikedLocation(
+  async viewLikedLocations(
     @Query('next_cursor') next_cursor: string,
     @CurrentUser() user: UserDocument,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
-    return await this.likeLocationService.viewLikedLocation(next_cursor, user);
+    return await this.likeLocationService.viewLocationsLikedByUser(
+      next_cursor,
+      user,
+    );
   }
 }

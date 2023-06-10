@@ -55,9 +55,10 @@ export class LikeLocationRepository {
     });
   }
 
-  public async findLikedLocationsByUser(
+  public async findLikes(
     queryObject: any,
     next_cursor: string,
+    getLocationsLikedByUser: boolean = false,
   ): Promise<{
     results: any[];
     next_cursor: string;
@@ -72,13 +73,23 @@ export class LikeLocationRepository {
       queryObject._id = { $lt: _id };
     }
 
-    let likedLocations = this.likeLocationModel
-      .find(queryObject)
-      .populate('locationId', '_id name address imageUrls heartCount createdAt')
-      .select('-userId');
+    let likedLocations = getLocationsLikedByUser
+      ? this.likeLocationModel
+          .find(queryObject)
+          .populate(
+            'locationId',
+            '_id name address imageUrls heartCount createdAt',
+          )
+          .select('-userId')
+      : this.likeLocationModel
+          .find(queryObject)
+          .populate('userId', '_id username email imageUrl createdAt')
+          .select('-locationId');
     likedLocations = likedLocations.sort('-createdAt -_id');
     likedLocations = likedLocations.limit(
-      CommonConstant.LOCATION_PAGINATION_LIMIT,
+      getLocationsLikedByUser
+        ? CommonConstant.LOCATION_PAGINATION_LIMIT
+        : CommonConstant.USER_PAGINATION_LIMIT,
     );
 
     let results: any[] = await likedLocations;
@@ -91,8 +102,10 @@ export class LikeLocationRepository {
         lastResult.createdAt.toISOString() + '_' + lastResult._id,
       ).toString('base64');
     }
-    
-    results = results.map((res) => res.locationId);
+
+    results = getLocationsLikedByUser
+      ? results.map((res) => res.locationId)
+      : results.map((res) => res.userId);
 
     return {
       results,
