@@ -6,6 +6,7 @@ import { CreateLocationDto } from '../dto/create-location.dto';
 import { UserDocument } from '../../user/schema/users.schema';
 import { CommonConstant } from '../../../common/constant';
 import { UpdateLocationDto } from '../dto/update-location.dto';
+import { LocationSortingType } from '../../../common/location-sortring-type.enum';
 
 @Injectable()
 export class LocationRepository {
@@ -65,99 +66,48 @@ export class LocationRepository {
       : null;
   }
 
-  public async viewLocations(
-    queryObject: any,
-    next_cursor: string,
-    sortByHeartCount: boolean = false,
-  ): Promise<{
-    results: any[];
-    next_cursor: string;
-  }> {
-    if (next_cursor) {
-      const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
-        .toString('ascii')
-        .split('_');
-      if (sortByHeartCount) {
-        // if sort by heart count
-        const [heartCount, createdAt, _id] = decodedFromNextCursor;
-        queryObject.$or = [
-          { heartCount: { $lt: heartCount } },
-          {
-            heartCount: heartCount,
-            createdAt: { $lte: createdAt },
-            _id: { $lt: _id },
-          },
-        ];
-      } else {
-        // otherwise, sort by default to find latest
-        const [createdAt, _id] = decodedFromNextCursor;
-        queryObject.createdAt = { $lte: createdAt };
-        queryObject._id = { $lt: _id };
-      }
-    }
-
-    let locations = this.locationModel
-      .find(queryObject)
-      .select('_id name address imageUrls heartCount createdAt');
-    locations = sortByHeartCount
-      ? locations.sort('-heartCount -createdAt -_id')
-      : locations.sort('-createdAt -_id');
-    locations = locations.limit(CommonConstant.LOCATION_PAGINATION_LIMIT);
-    let results: any[] = await locations;
-
-    const count = await this.locationModel.count(queryObject);
-    next_cursor = null;
-    if (count > results.length) {
-      const lastResult = results[results.length - 1];
-      next_cursor = sortByHeartCount
-        ? Buffer.from(
-            lastResult.heartCount +
-              '_' +
-              lastResult.createdAt.toISOString() +
-              '_' +
-              lastResult._id,
-          ).toString('base64')
-        : Buffer.from(
-            lastResult.createdAt.toISOString() + '_' + lastResult._id,
-          ).toString('base64');
-    }
-
-    return {
-      results,
-      next_cursor,
-    };
-  }
-
   public async filterLocation(
+    sortType: LocationSortingType,
     locationQuery: any,
     queryObject: any,
     next_cursor: string,
-    user: UserDocument,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
+    let sortingQuery: any = {};
+    if (sortType === LocationSortingType.FEATURED) {
+      sortingQuery = { heartCount: -1, createdAt: -1, _id: -1 };
+    } else {
+      sortingQuery = { createdAt: -1, _id: -1 };
+    }
+
     if (next_cursor) {
       const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
         .toString('ascii')
         .split('_');
 
-      const [heartCount, createdAt, _id] = decodedFromNextCursor;
-
-      // query object in aggregate must be casted manually
-      queryObject.$or = [
-        { heartCount: { $lt: parseInt(heartCount, 10) } },
-        {
-          heartCount: parseInt(heartCount, 10),
-          createdAt: { $lte: new Date(createdAt) },
-          _id: { $lt: new mongoose.Types.ObjectId(_id) },
-        },
-      ];
+      if (sortType === LocationSortingType.FEATURED) {
+        const [heartCount, createdAt, _id] = decodedFromNextCursor;
+        // query object in aggregate must be casted manually
+        queryObject.$or = [
+          { heartCount: { $lt: parseInt(heartCount, 10) } },
+          {
+            heartCount: parseInt(heartCount, 10),
+            createdAt: { $lte: new Date(createdAt) },
+            _id: { $lt: new mongoose.Types.ObjectId(_id) },
+          },
+        ];
+      } else if (sortType === LocationSortingType.LATEST) {
+        const [createdAt, _id] = decodedFromNextCursor;
+        queryObject.createdAt = { $lte: new Date(createdAt) };
+        queryObject._id = { $lt: new mongoose.Types.ObjectId(_id) };
+      }
     }
 
     let filterPipelineStage: any[] = [
       {
-        $sort: { heartCount: -1, createdAt: -1, _id: -1 },
+        $sort: sortingQuery,
       },
       {
         $match: queryObject,
@@ -166,53 +116,15 @@ export class LocationRepository {
         $limit: CommonConstant.LOCATION_PAGINATION_LIMIT,
       },
       {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'user',
-        },
-      },
-      {
-        $unwind: {
-          path: '$user',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'likelocations',
-          let: { locationId: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  // use this operator to compare 2 fields in the same joined collections
-                  $and: [
-                    { $eq: ['$locationId', '$$locationId'] },
-                    {
-                      $eq: ['$userId', user._id],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'likes',
-        },
-      },
-      {
-        $addFields: {
-          likedByUser: {
-            $cond: [{ $gt: [{ $size: '$likes' }, 0] }, true, false],
-          },
-        },
-      },
-      {
         $project: {
           nameAddress: 0,
-          user: { isVerified: 0, locationCategories: 0, searchDistance: 0 },
-          likes: 0,
+          description: 0,
+          placeId: 0,
+          location: 0,
+          pricePerPerson: 0,
+          locationCategory: 0,
+          weekday: 0,
+          weekend: 0,
         },
       },
     ];
@@ -246,13 +158,19 @@ export class LocationRepository {
     next_cursor = null;
     if (count > results.length) {
       const lastResult = results[results.length - 1];
-      next_cursor = Buffer.from(
-        lastResult.heartCount +
-          '_' +
-          lastResult.createdAt.toISOString() +
-          '_' +
-          lastResult._id,
-      ).toString('base64');
+      if (sortType === LocationSortingType.FEATURED) {
+        next_cursor = Buffer.from(
+          lastResult.heartCount +
+            '_' +
+            lastResult.createdAt.toISOString() +
+            '_' +
+            lastResult._id,
+        ).toString('base64');
+      } else if (sortType === LocationSortingType.LATEST) {
+        next_cursor = Buffer.from(
+          lastResult.createdAt.toISOString() + '_' + lastResult._id,
+        ).toString('base64');
+      }
     }
 
     return {

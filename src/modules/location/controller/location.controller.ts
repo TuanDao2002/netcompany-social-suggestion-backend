@@ -24,6 +24,7 @@ import { FilterLocationDto } from '../dto/filter-location.dto';
 import { QueryParamsTransformPipe } from '../../../common/parse-query.pipe';
 import { LikeLocationService } from '../service/like-location.service';
 import { LikeLocation } from '../schema/like-location.schema';
+import { LocationSortingType } from '../../../common/location-sortring-type.enum';
 
 @Controller('location')
 @UseGuards(JwtGuard)
@@ -75,46 +76,9 @@ export class LocationController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Get('latest')
-  async viewLatestLocation(
-    @Query('next_cursor') next_cursor: string,
-    @Query(QueryParamsTransformPipe) queryParams: FilterLocationDto,
-    @CurrentUser() user: UserDocument,
-  ): Promise<{
-    results: any[];
-    next_cursor: string;
-  }> {
-    const { latitude, longitude } = queryParams;
-    return await this.locationService.viewLatestLocation(
-      next_cursor,
-      latitude,
-      longitude,
-      user,
-    );
-  }
-
-  @HttpCode(HttpStatus.OK)
-  @Get('featured')
-  async viewFeaturedLocation(
-    @Query('next_cursor') next_cursor: string,
-    @Query(QueryParamsTransformPipe) queryParams: FilterLocationDto,
-    @CurrentUser() user: UserDocument,
-  ): Promise<{
-    results: any[];
-    next_cursor: string;
-  }> {
-    const { latitude, longitude } = queryParams;
-    return await this.locationService.viewFeaturedLocation(
-      next_cursor,
-      latitude,
-      longitude,
-      user,
-    );
-  }
-
-  @HttpCode(HttpStatus.OK)
-  @Get('filter')
+  @Get('filter/:sortType')
   async viewFilteredLocation(
+    @Param('sortType') sortType: LocationSortingType,
     @Query('next_cursor') next_cursor: string,
     @Query(QueryParamsTransformPipe) queryParams: FilterLocationDto,
     @CurrentUser() user: UserDocument,
@@ -123,8 +87,26 @@ export class LocationController {
     next_cursor: string;
   }> {
     return await this.locationService.filterLocation(
+      sortType,
       next_cursor,
       queryParams,
+      user,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('search/:input')
+  async searchLocationByInput(
+    @Query('next_cursor') next_cursor: string,
+    @Param('input') input: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    return await this.locationService.searchLocationByInput(
+      input,
+      next_cursor,
       user,
     );
   }
@@ -160,13 +142,16 @@ export class LocationController {
 
   @HttpCode(HttpStatus.OK)
   @Get('liked/me')
-  async viewLikedLocation(
+  async viewLikedLocations(
     @Query('next_cursor') next_cursor: string,
     @CurrentUser() user: UserDocument,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
-    return await this.likeLocationService.viewLikedLocation(next_cursor, user);
+    return await this.likeLocationService.viewLocationsLikedByUser(
+      next_cursor,
+      user,
+    );
   }
 }

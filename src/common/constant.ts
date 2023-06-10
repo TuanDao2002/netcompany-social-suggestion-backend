@@ -1,4 +1,4 @@
-import { CookieOptions } from "express";
+import { CookieOptions } from 'express';
 
 export class CommonConstant {
   public static readonly PORT = 8080;
@@ -9,11 +9,12 @@ export class CommonConstant {
   public static readonly COOKIE_OPTIONS: CookieOptions = {
     maxAge: CommonConstant.MAX_AGE,
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: 'strict',
     path: '/',
   };
 
   public static readonly TimeRegex = /^\d{4}$/;
 
   public static readonly LOCATION_PAGINATION_LIMIT = 5;
+  public static readonly USER_PAGINATION_LIMIT = 10;
 }

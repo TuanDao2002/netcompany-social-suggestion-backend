@@ -11,6 +11,7 @@ import { UserDocument } from '../../user/schema/users.schema';
 import { Utils } from '../../../common/utils';
 import { UpdateLocationDto } from '../dto/update-location.dto';
 import { FilterLocationDto } from '../dto/filter-location.dto';
+import { LocationSortingType } from '../../../common/location-sortring-type.enum';
 
 @Injectable()
 export class LocationService {
@@ -121,16 +122,17 @@ export class LocationService {
     }
 
     const queryObject = { userId: user._id };
-    return await this.locationRepository.viewLocations(
+    return await this.locationRepository.filterLocation(
+      LocationSortingType.LATEST,
+      {},
       queryObject,
       next_cursor,
     );
   }
 
-  public async viewLatestLocation(
+  public async searchLocationByInput(
+    input: string,
     next_cursor: string,
-    latitude: number,
-    longitude: number,
     user: UserDocument,
   ): Promise<{
     results: any;
@@ -140,81 +142,25 @@ export class LocationService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    if (!latitude || !longitude) {
-      throw new BadRequestException(
-        'You have not sent coordinates to search locations',
-      );
-    }
-
     let queryObject: any = {};
-    const { locationCategories, searchDistance } = user;
-    if (locationCategories.length > 0) {
-      queryObject.locationCategory = { $in: locationCategories };
-    }
-
-    if (searchDistance > 0) {
-      queryObject.location = {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [longitude, latitude],
-          },
-          $maxDistance: searchDistance * 1000,
-        },
-      };
-    }
-
-    return await this.locationRepository.viewLocations(
-      queryObject,
-      next_cursor,
+    const formattedSearchInput = Utils.removeSpace(
+      String(input).replace(/[^\p{L}\d\s]/giu, ''),
     );
-  }
-
-  public async viewFeaturedLocation(
-    next_cursor: string,
-    latitude: number,
-    longitude: number,
-    user: UserDocument,
-  ): Promise<{
-    results: any;
-    next_cursor: string;
-  }> {
-    if (!user) {
-      throw new UnauthorizedException('You have not signed in yet');
+    if (formattedSearchInput) {
+      const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
+      queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
     }
-
-    if (!latitude || !longitude) {
-      throw new BadRequestException(
-        'You have not sent coordinates to search locations',
-      );
-    }
-
-    let queryObject: any = {};
-    const { locationCategories, searchDistance } = user;
-    if (locationCategories.length > 0) {
-      queryObject.locationCategory = { $in: locationCategories };
-    }
-
-    if (searchDistance > 0) {
-      queryObject.location = {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [longitude, latitude],
-          },
-          $maxDistance: searchDistance * 1000,
-        },
-      };
-    }
-
-    return await this.locationRepository.viewLocations(
+    
+    return await this.locationRepository.filterLocation(
+      LocationSortingType.LATEST,
+      {},
       queryObject,
       next_cursor,
-      true,
     );
   }
 
   public async filterLocation(
+    sortType: LocationSortingType,
     next_cursor: string,
     queryParams: FilterLocationDto,
     user: UserDocument,
@@ -226,7 +172,7 @@ export class LocationService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    const {
+    let {
       searchInput,
       locationCategory,
       weekday,
@@ -251,7 +197,9 @@ export class LocationService {
     }
 
     if (locationCategory) {
-      queryObject.locationCategory = locationCategory;
+      queryObject.locationCategory = { $in: [locationCategory] };
+    } else if (user.locationCategories.length > 0) {
+      queryObject.locationCategory = { $in: user.locationCategories };
     }
 
     let periodQuery: any[] = [];
@@ -444,7 +392,8 @@ export class LocationService {
       queryObject.$and = periodQuery;
     }
 
-    if (latitude && longitude && searchDistance) {
+    if (latitude && longitude) {
+      searchDistance = searchDistance || user.searchDistance;
       locationQuery.$geoNear = {
         near: {
           type: 'Point',
@@ -457,10 +406,10 @@ export class LocationService {
     }
 
     const filteredData = await this.locationRepository.filterLocation(
+      sortType,
       locationQuery,
       queryObject,
       next_cursor,
-      user,
     );
 
     return {

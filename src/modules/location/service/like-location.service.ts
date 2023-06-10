@@ -6,11 +6,13 @@ import {
 import { LikeLocationRepository } from '../repository/like-location.repository';
 import { UserDocument } from '../../user/schema/users.schema';
 import { LikeLocation } from '../schema/like-location.schema';
+import { LocationRepository } from '../repository/location.repository';
 
 @Injectable()
 export class LikeLocationService {
   constructor(
     private readonly likeLocationRepository: LikeLocationRepository,
+    private readonly locationRepository: LocationRepository,
   ) {}
 
   public async likeLocation(
@@ -27,6 +29,13 @@ export class LikeLocationService {
     );
     if (existingLike) {
       throw new BadRequestException('You already liked this location');
+    }
+
+    const existingLocation = await this.locationRepository.findOneById(
+      locationId,
+    );
+    if (!existingLocation) {
+      throw new BadRequestException('This location does not exist');
     }
 
     return await this.likeLocationRepository.create(user, locationId);
@@ -48,10 +57,17 @@ export class LikeLocationService {
       throw new BadRequestException('You did not like this location');
     }
 
+    const existingLocation = await this.locationRepository.findOneById(
+      locationId,
+    );
+    if (!existingLocation) {
+      throw new BadRequestException('This location does not exist');
+    }
+
     await this.likeLocationRepository.delete(user, locationId);
   }
 
-  public async viewLikedLocation(
+  public async viewLocationsLikedByUser(
     next_cursor: string,
     user: UserDocument,
   ): Promise<{
@@ -62,8 +78,29 @@ export class LikeLocationService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    return await this.likeLocationRepository.findLikedLocationsByUser(
+    return await this.likeLocationRepository.findLikes(
       { userId: user._id },
+      next_cursor,
+      true,
+    );
+  }
+
+  public async viewUsersWhoLikedLocation(
+    next_cursor: string,
+    locationId: string,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    const existingLocation = await this.locationRepository.findOneById(
+      locationId,
+    );
+    if (!existingLocation) {
+      throw new BadRequestException('This location does not exist');
+    }
+
+    return await this.likeLocationRepository.findLikes(
+      { locationId },
       next_cursor,
     );
   }
