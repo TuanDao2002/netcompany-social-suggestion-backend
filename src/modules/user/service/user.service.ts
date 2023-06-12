@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { UserRepository } from '../repository/user.repository';
 import { UserDocument } from '../schema/users.schema';
@@ -18,7 +18,7 @@ export class UserService {
   ): Promise<Partial<UserDocument>> {
     const findUser = await this.userRepository.findById(id);
     if (!findUser) {
-      throw new BadRequestException('This user does not exist');
+      throw new NotFoundException('This user does not exist');
     }
     const { username, imageUrl, email } = findUser;
 

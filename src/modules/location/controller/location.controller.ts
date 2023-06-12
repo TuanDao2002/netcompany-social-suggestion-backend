@@ -59,8 +59,7 @@ export class LocationController {
     @CurrentUser() user: UserDocument,
     @Res() res: Response,
   ) {
-    await this.locationService.deleteLocation(locationId, user);
-    res.json({ msg: 'The location is deleted' });
+    await this.locationService.deleteLocation(locationId, user, res);
   }
 
   @HttpCode(HttpStatus.OK)

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { LikeLocationRepository } from '../repository/like-location.repository';
@@ -35,7 +36,7 @@ export class LikeLocationService {
       locationId,
     );
     if (!existingLocation) {
-      throw new BadRequestException('This location does not exist');
+      throw new NotFoundException('This location does not exist');
     }
 
     return await this.likeLocationRepository.create(user, locationId);
@@ -61,7 +62,7 @@ export class LikeLocationService {
       locationId,
     );
     if (!existingLocation) {
-      throw new BadRequestException('This location does not exist');
+      throw new NotFoundException('This location does not exist');
     }
 
     await this.likeLocationRepository.delete(user, locationId);
@@ -96,7 +97,7 @@ export class LikeLocationService {
       locationId,
     );
     if (!existingLocation) {
-      throw new BadRequestException('This location does not exist');
+      throw new NotFoundException('This location does not exist');
     }
 
     return await this.likeLocationRepository.findLikes(

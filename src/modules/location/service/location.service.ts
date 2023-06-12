@@ -12,10 +12,15 @@ import { Utils } from '../../../common/utils';
 import { UpdateLocationDto } from '../dto/update-location.dto';
 import { FilterLocationDto } from '../dto/filter-location.dto';
 import { LocationSortingType } from '../../../common/location-sortring-type.enum';
+import { Response } from 'express';
+import { LikeLocationRepository } from '../repository/like-location.repository';
 
 @Injectable()
 export class LocationService {
-  constructor(private readonly locationRepository: LocationRepository) {}
+  constructor(
+    private readonly locationRepository: LocationRepository,
+    private readonly likeLocationRepository: LikeLocationRepository,
+  ) {}
 
   public async createLocation(
     locationData: CreateLocationDto,
@@ -58,7 +63,7 @@ export class LocationService {
       locationId,
     );
     if (!existingLocation) {
-      throw new BadRequestException('This location does not exist');
+      throw new NotFoundException('This location does not exist');
     }
 
     if (!this.isOwner(user, existingLocation)) {
@@ -91,6 +96,7 @@ export class LocationService {
   public async deleteLocation(
     locationId: string,
     user: UserDocument,
+    res: Response,
   ): Promise<void> {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
@@ -100,7 +106,7 @@ export class LocationService {
       locationId,
     );
     if (!existingLocation) {
-      throw new BadRequestException('This location does not exist');
+      throw new NotFoundException('This location does not exist');
     }
 
     if (!this.isOwner(user, existingLocation)) {
@@ -108,6 +114,9 @@ export class LocationService {
     }
 
     await this.locationRepository.deleteLocation(locationId);
+    res.json({ msg: 'The location is deleted' });
+
+    await this.likeLocationRepository.removeLikesOfLocation(locationId);
   }
 
   public async viewCreatedLocation(
