@@ -20,10 +20,10 @@ export class UserService {
     if (!findUser) {
       throw new BadRequestException('This user does not exist');
     }
-    const { username, imageUrl } = findUser;
+    const { username, imageUrl, email } = findUser;
 
     if (findUser._id.toHexString() !== user._id.toHexString()) {
-      return { username, imageUrl };
+      return { username, imageUrl, email };
     }
 
     return findUser;
