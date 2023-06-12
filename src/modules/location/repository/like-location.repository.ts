@@ -55,6 +55,10 @@ export class LikeLocationRepository {
     });
   }
 
+  public async removeLikesOfLocation(locationId: string): Promise<void> {
+    await this.likeLocationModel.deleteMany({ locationId });
+  }
+
   public async findLikes(
     queryObject: any,
     next_cursor: string,
