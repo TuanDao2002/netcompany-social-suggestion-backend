@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { User } from '../../user/schema/users.schema';
 
-export type LikeLocationDocument = HydratedDocument<Event>;
+export type EventDocument = HydratedDocument<Event>;
 
 @Schema({ timestamps: true })
 export class Event {
@@ -36,7 +36,7 @@ export class Event {
         required: true,
       },
     },
-    required: true,
+    required: false,
   })
   duration: {
     hours: number;
@@ -51,6 +51,12 @@ export class Event {
     trim: true,
   })
   description: string;
+
+  @Prop({
+    required: true,
+    default: false,
+  })
+  allDay: boolean;
 
   @Prop({
     type: [mongoose.Schema.Types.ObjectId],
@@ -70,3 +76,5 @@ export class Event {
 export const EventSchema = SchemaFactory.createForClass(Event);
 EventSchema.index({ guests: 1 });
 EventSchema.index({ userId: 1 });
+EventSchema.index({ createdAt: 1 });
+
