@@ -20,10 +20,9 @@ export class UserRepository {
 
   public async validateNewUser(
     email: string,
-    username: string,
   ): Promise<UserDocument> {
     return await this.userModel.findOne({
-      $and: [{ isVerified: true }, { $or: [{ email }, { username }] }],
+      $and: [{ isVerified: true }, { email }],
     });
   }
 
