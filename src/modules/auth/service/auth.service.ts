@@ -83,27 +83,12 @@ export class AuthService {
       // throw new BadRequestException('Invalid Netcompany email'); // for production only
     }
 
-    const findVerifiedUser = await this.userRepository.validateNewUser(
-      email,
-      payload.username,
-    );
+    const findVerifiedUser = await this.userRepository.validateNewUser(email);
     if (findVerifiedUser) {
-      const {
-        isVerified,
-        username: verifiedUsername,
-        email: verifiedEmail,
-      } = findVerifiedUser;
-      
-      if (isVerified) {
-        if (verifiedUsername === payload.username) {
-          throw new BadRequestException(
-            'This username is duplicated with other account',
-          );
-        }
-
-        if (verifiedEmail === email) {
-          throw new BadRequestException('Account with this email is already verified');
-        }
+      if (findVerifiedUser.email === email) {
+        throw new BadRequestException(
+          'Account with this email is already verified',
+        );
       }
     }
 
@@ -113,7 +98,7 @@ export class AuthService {
     );
 
     if (!verifiedUser) {
-      throw new BadRequestException("This email was not used to sign in yet")
+      throw new BadRequestException('This email was not used to sign in yet');
     }
 
     const accessToken = await this.signToken(

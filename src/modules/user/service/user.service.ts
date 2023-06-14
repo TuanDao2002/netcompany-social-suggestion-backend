@@ -33,20 +33,6 @@ export class UserService {
     updateData: UpdateUserProfileDto,
     user: UserDocument,
   ): Promise<UserDocument> {
-    if (updateData.username) {
-      const duplicateUsername = await this.userRepository.findByUsername(
-        updateData.username,
-      );
-      if (
-        duplicateUsername &&
-        duplicateUsername._id.toHexString() !== user._id.toHexString()
-      ) {
-        throw new BadRequestException(
-          'The username is duplicated with another account',
-        );
-      }
-    }
-
     return await this.userRepository.updateById(
       user._id.toHexString(),
       updateData,

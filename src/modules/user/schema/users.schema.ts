@@ -13,7 +13,6 @@ export class User {
   @Prop({
     required: false,
     trim: true,
-    unique: true,
     sparse: true, // only index this prop when it is not null
   })
   username: string;
@@ -41,7 +40,7 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 UserSchema.index(
-  { username: 1, email: 1 },
+  { email: 1 },
   {
     unique: true,
   },
