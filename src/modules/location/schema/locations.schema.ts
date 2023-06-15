@@ -115,7 +115,7 @@ export class Location {
         match: CommonConstant.TimeRegex,
       },
     },
-    required: true,
+    required: false,
   })
   weekend: {
     openTime: string;
