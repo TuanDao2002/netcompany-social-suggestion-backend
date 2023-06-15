@@ -101,7 +101,8 @@ export class CreateLocationDto {
   @ValidateNested()
   @Type(() => Period)
   weekday: Period;
-
+  
+  @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => Period)

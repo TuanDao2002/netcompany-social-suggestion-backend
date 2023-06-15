@@ -306,6 +306,8 @@ export class LocationService {
     }
 
     if (weekend && weekend.openTime && weekend.closeTime) {
+      periodQuery.push({ weekend: { $exists: true, $ne: null } });
+
       if (weekend.openTime === '0000') {
         weekend.openTime = '2400';
       }
