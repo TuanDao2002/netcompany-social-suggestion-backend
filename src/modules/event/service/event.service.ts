@@ -10,7 +10,7 @@ export class EventService {
 
   public async createEvent(eventData: CreateEventDto, user: UserDocument) {
     const { startDate, startTime, allDay } = eventData;
-    let luxonDate = DateTime.fromISO(startDate.toString());
+    let luxonDate = DateTime.fromISO(startDate.toString(), { setZone: true });
     if (allDay) {
       luxonDate = luxonDate.set({ hour: 0, minute: 0 });
     } else if (startTime) {
