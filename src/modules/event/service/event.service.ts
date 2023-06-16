@@ -20,6 +20,7 @@ export class EventService {
       throw new BadRequestException('Please enter start time of the event');
     }
 
+    console.log(luxonDate.toUTC().toBSON())
     delete eventData.startDate;
     delete eventData.startTime;
 
