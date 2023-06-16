@@ -27,6 +27,5 @@ export class EventService {
       { ...eventData, startDateTime: luxonDate.toUTC().toBSON() },
       user,
     );
-    return eventData;
   }
 }
