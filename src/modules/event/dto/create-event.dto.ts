@@ -8,7 +8,6 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  Matches,
   Max,
   Min,
   ValidateNested,
@@ -17,10 +16,21 @@ import { IsNotBlank } from '../../../common/validator';
 import { CommonConstant } from '../../../common/constant';
 import { Type } from 'class-transformer';
 
-export class Duration {
+export class StartTime {
   @IsNumber()
   @Min(0)
   @Max(24)
+  hours: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(59)
+  minutes: number;
+}
+
+export class Duration {
+  @IsNumber()
+  @Min(0)
   hours: number;
 
   @IsNumber()
@@ -44,10 +54,11 @@ export class CreateEventDto {
   @IsNotEmpty()
   startDate: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @Matches(CommonConstant.TimeRegex)
-  startTime: string;
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => StartTime)
+  startTime: StartTime;
 
   @IsOptional()
   @IsObject()
@@ -68,7 +79,7 @@ export class CreateEventDto {
   allDay: boolean = false;
 
   @IsArray()
-  @ArrayMinSize(0)
+  @ArrayMinSize(1)
   @IsString({ each: true })
   guests: [string];
 }
