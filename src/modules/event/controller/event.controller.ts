@@ -7,7 +7,7 @@ import { JwtGuard } from "../../auth/guard/jwt.guard";
 import { CreateEventDto } from "../dto/create-event.dto";
 
 @Controller('event')
-// @UseGuards(JwtGuard)
+@UseGuards(JwtGuard)
 export class EventController {
   constructor(private readonly eventService: EventService) {}
   @HttpCode(HttpStatus.OK)
