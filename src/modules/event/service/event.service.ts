@@ -24,9 +24,10 @@ export class EventService {
     delete eventData.startDate;
     delete eventData.startTime;
 
-    return await this.eventRepository.createEvent(
-      { ...eventData, startDateTime: luxonDate.toUTC().toBSON() },
-      user,
-    );
+    // return await this.eventRepository.createEvent(
+    //   { ...eventData, startDateTime: luxonDate.toUTC().toBSON() },
+    //   user,
+    // );
+    return eventData;
   }
 }

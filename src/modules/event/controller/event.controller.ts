@@ -15,7 +15,7 @@ export class EventController {
   async createLocation(
     @Body() body: CreateEventDto,
     @CurrentUser() user: UserDocument,
-  ): Promise<EventDocument> {
+  ): Promise<any> {
     return await this.eventService.createEvent(body, user);
   }
 }
