@@ -158,7 +158,7 @@ export class EventService {
     }
 
     await this.eventRepository.deleteEvent(eventId);
-    res.json({ msg: 'The location is deleted' });
+    res.json({ msg: 'The event is deleted' });
   }
 
   public isOwner(user: UserDocument, existingEvent: EventDocument): boolean {
