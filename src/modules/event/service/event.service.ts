@@ -20,6 +20,8 @@ export class EventService {
       throw new BadRequestException('Please enter start time of the event');
     }
 
+    eventData.guests = Array.from(new Set(eventData.guests)) as [string];
+
     delete eventData.startDate;
     delete eventData.startTime;
 
