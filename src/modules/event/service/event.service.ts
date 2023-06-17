@@ -144,7 +144,11 @@ export class EventService {
     });
   }
 
-  public async deleteEvent(eventId: string, user: UserDocument, res: Response) {
+  public async deleteEvent(
+    eventId: string,
+    user: UserDocument,
+    res: Response,
+  ): Promise<void> {
     const existingEvent = await this.eventRepository.findEventById(eventId);
     if (!existingEvent) {
       throw new NotFoundException('This event does not exist');

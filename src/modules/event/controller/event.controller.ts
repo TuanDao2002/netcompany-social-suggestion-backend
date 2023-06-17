@@ -20,7 +20,7 @@ import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { EventFilterType } from '../../../common/event-filter-type.enum';
 import { UpdateEventDto } from '../dto/update-event.dto';
-import { Response } from "express";
+import { Response } from 'express';
 
 @Controller('event')
 @UseGuards(JwtGuard)
@@ -74,6 +74,6 @@ export class EventController {
     @CurrentUser() user: UserDocument,
     @Res() res: Response,
   ): Promise<void> {
-    return;
+    await this.eventService.deleteEvent(eventId, user, res);
   }
 }
