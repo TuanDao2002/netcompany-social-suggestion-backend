@@ -16,7 +16,7 @@ export class Event {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: Location.name,
-    required: true,
+    required: false,
   })
   locationId: Types.ObjectId;
 

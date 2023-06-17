@@ -14,12 +14,14 @@ import { FilterLocationDto } from '../dto/filter-location.dto';
 import { LocationSortingType } from '../../../common/location-sortring-type.enum';
 import { Response } from 'express';
 import { LikeLocationRepository } from '../repository/like-location.repository';
+import { EventRepository } from '../../event/repository/event.repository';
 
 @Injectable()
 export class LocationService {
   constructor(
     private readonly locationRepository: LocationRepository,
     private readonly likeLocationRepository: LikeLocationRepository,
+    private readonly eventRepository: EventRepository,
   ) {}
 
   public async createLocation(
@@ -117,6 +119,7 @@ export class LocationService {
     res.json({ msg: 'The location is deleted' });
 
     await this.likeLocationRepository.removeLikesOfLocation(locationId);
+    await this.eventRepository.updateEventsOrganizedAtLocation(locationId);
   }
 
   public async viewCreatedLocation(
@@ -159,7 +162,7 @@ export class LocationService {
       const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
       queryObject.nameAddress = { $regex: `${regexPattern}`, $options: 'i' };
     }
-    
+
     return await this.locationRepository.filterLocation(
       LocationSortingType.LATEST,
       {},

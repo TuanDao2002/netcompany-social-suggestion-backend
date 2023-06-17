@@ -13,7 +13,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { IsNotBlank } from '../../../common/validator';
-import { CommonConstant } from '../../../common/constant';
 import { Type } from 'class-transformer';
 
 export class StartTime {
@@ -45,10 +44,11 @@ export class CreateEventDto {
   @IsNotBlank({ message: 'name must not contain only whitespaces' })
   name: string;
 
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @IsNotBlank({ message: 'locationId must not contain only whitespaces' })
-  locationId: string;
+  locationId: string = null;
 
   @IsDateString()
   @IsNotEmpty()
@@ -58,13 +58,13 @@ export class CreateEventDto {
   @IsObject()
   @ValidateNested()
   @Type(() => StartTime)
-  startTime: StartTime;
+  startTime: StartTime = null;
 
   @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => Duration)
-  duration: Duration;
+  duration: Duration = null;
 
   @IsArray()
   @ArrayMinSize(0)
@@ -73,7 +73,7 @@ export class CreateEventDto {
 
   @IsOptional()
   @IsString()
-  description: string;
+  description: string = null;
 
   @IsBoolean()
   allDay: boolean = false;

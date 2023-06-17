@@ -17,4 +17,5 @@ export class CommonConstant {
 
   public static readonly LOCATION_PAGINATION_LIMIT = 5;
   public static readonly USER_PAGINATION_LIMIT = 10;
+  public static readonly EVENT_PAGINATION_LIMIT = 5;
 }
