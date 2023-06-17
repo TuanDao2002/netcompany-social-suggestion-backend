@@ -9,8 +9,10 @@ import {
   LikeLocation,
   LikeLocationSchema,
 } from './schema/like-location.schema';
-import { LikeLocationService } from "./service/like-location.service";
-import { LikeLocationRepository } from "./repository/like-location.repository";
+import { LikeLocationService } from './service/like-location.service';
+import { LikeLocationRepository } from './repository/like-location.repository';
+import { Event, EventSchema } from '../event/schema/event.schema';
+import { EventRepository } from '../event/repository/event.repository';
 
 @Module({
   imports: [
@@ -18,10 +20,17 @@ import { LikeLocationRepository } from "./repository/like-location.repository";
     MongooseModule.forFeature([
       { name: Location.name, schema: LocationSchema },
       { name: LikeLocation.name, schema: LikeLocationSchema },
+      { name: Event.name, schema: EventSchema },
     ]),
   ],
   controllers: [LocationController],
-  providers: [LocationService, LocationRepository, LikeLocationService, LikeLocationRepository],
+  providers: [
+    LocationService,
+    LocationRepository,
+    LikeLocationService,
+    LikeLocationRepository,
+    EventRepository,
+  ],
   exports: [LocationService],
 })
 export class LocationModule {}

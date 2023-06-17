@@ -1,12 +1,15 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../../auth/guard/user.decorator';
@@ -16,6 +19,8 @@ import { EventService } from '../service/event.service';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { EventFilterType } from '../../../common/event-filter-type.enum';
+import { UpdateEventDto } from '../dto/update-event.dto';
+import { Response } from "express";
 
 @Controller('event')
 @UseGuards(JwtGuard)
@@ -24,7 +29,7 @@ export class EventController {
 
   @HttpCode(HttpStatus.OK)
   @Post('')
-  async createLocation(
+  async createEvent(
     @Body() body: CreateEventDto,
     @CurrentUser() user: UserDocument,
   ): Promise<EventDocument> {
@@ -51,5 +56,24 @@ export class EventController {
     @CurrentUser() user: UserDocument,
   ): Promise<EventDocument> {
     return await this.eventService.viewDetailEvent(eventId, user);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Patch('')
+  async updateEvent(
+    @Body() body: UpdateEventDto,
+    @CurrentUser() user: UserDocument,
+  ): Promise<EventDocument> {
+    return await this.eventService.updateEvent(body, user);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete(':eventId')
+  async deleteEvent(
+    @Param('eventId') eventId: string,
+    @CurrentUser() user: UserDocument,
+    @Res() res: Response,
+  ): Promise<void> {
+    return;
   }
 }

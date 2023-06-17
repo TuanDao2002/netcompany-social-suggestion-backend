@@ -164,11 +164,11 @@ export class EventRepository {
       {
         $project: {
           location: {
-            address: 0,
             placeId: 0,
             nameAddress: 0,
             location: 0,
             description: 0,
+            imageUrls: 0,
             locationCategory: 0,
             pricePerPerson: 0,
             weekday: 0,
@@ -189,5 +189,29 @@ export class EventRepository {
         },
       },
     ]);
+  }
+
+  public async findEventById(eventId: string): Promise<EventDocument> {
+    return await this.eventModel.findById(eventId);
+  }
+
+  public async updateEvent(updateEventData: any): Promise<EventDocument> {
+    return await this.eventModel.findOneAndUpdate(
+      {
+        _id: updateEventData.eventId,
+      },
+      {
+        ...updateEventData,
+      },
+      { new: true },
+    );
+  }
+
+  public async deleteEvent(eventId: string): Promise<void> {
+    await this.eventModel.deleteOne({ _id: eventId });
+  }
+
+  public async updateEventsOrganizedAtLocation(locationId: string) {
+    await this.eventModel.updateMany({ locationId }, { locationId: null });
   }
 }
