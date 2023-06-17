@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../schema/users.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { VerifyUserDto } from '../dto/verify-user.dto';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
+import { CommonConstant } from '../../../common/constant';
 
 @Injectable()
 export class UserRepository {
@@ -57,5 +58,75 @@ export class UserRepository {
     return await this.userModel.findByIdAndUpdate(id, updateData, {
       new: true,
     });
+  }
+
+  public async filterUser(
+    queryObject: any,
+    next_cursor: string,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    let sortingQuery = { createdAt: -1, _id: -1 };
+    if (next_cursor) {
+      const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
+        .toString('ascii')
+        .split('_');
+
+      const [createdAt, _id] = decodedFromNextCursor;
+      queryObject.createdAt = { $lte: new Date(createdAt) };
+      queryObject._id = { $lt: new mongoose.Types.ObjectId(_id) };
+    }
+
+    let filterPipelineStage: any[] = [
+      {
+        $sort: sortingQuery,
+      },
+      {
+        $match: queryObject,
+      },
+      {
+        $limit: CommonConstant.USER_PAGINATION_LIMIT,
+      },
+      {
+        $project: {
+          locationCategories: 0,
+          searchDistance: 0,
+          isVerified: 0,
+        },
+      },
+    ];
+
+    let countPipelineStage: any[] = [
+      {
+        $match: queryObject,
+      },
+      {
+        $group: {
+          _id: null,
+          numOfResults: { $sum: 1 },
+        },
+      },
+    ];
+
+    let results: any[] = await this.userModel.aggregate(filterPipelineStage);
+
+    const totalMatchResults = await this.userModel.aggregate(
+      countPipelineStage,
+    );
+    const count = totalMatchResults[0]?.numOfResults || 0;
+
+    next_cursor = null;
+    if (count > results.length) {
+      const lastResult = results[results.length - 1];
+      next_cursor = Buffer.from(
+        lastResult.createdAt.toISOString() + '_' + lastResult._id,
+      ).toString('base64');
+    }
+
+    return {
+      results,
+      next_cursor,
+    };
   }
 }
