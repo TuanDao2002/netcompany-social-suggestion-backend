@@ -76,4 +76,16 @@ export class EventController {
   ): Promise<void> {
     await this.eventService.deleteEvent(eventId, user, res);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('search/:name')
+  async searchEventByName(
+    @Query('next_cursor') next_cursor: string,
+    @Param('name') name: string,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    return await this.eventService.searchEventByInput(name, next_cursor);
+  }
 }

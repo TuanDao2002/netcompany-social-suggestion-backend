@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { User } from '../../user/schema/users.schema';
-import { Location } from "../../location/schema/locations.schema";
+import { Location } from '../../location/schema/locations.schema';
 
 export type EventDocument = HydratedDocument<Event>;
 
@@ -25,6 +25,12 @@ export class Event {
     required: true,
   })
   startDateTime: Date;
+
+  @Prop({
+    type: Date,
+    required: true,
+  })
+  expiredAt: Date;
 
   @Prop({
     type: {
@@ -78,4 +84,4 @@ export const EventSchema = SchemaFactory.createForClass(Event);
 EventSchema.index({ guests: 1 });
 EventSchema.index({ userId: 1 });
 EventSchema.index({ createdAt: 1 });
-
+EventSchema.index({ expiredAt: 1 });
