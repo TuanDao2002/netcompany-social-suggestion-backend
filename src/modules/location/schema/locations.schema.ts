@@ -134,6 +134,9 @@ export class Location {
     required: true,
   })
   userId: Types.ObjectId;
+
+  @Prop({ default: false, required: false })
+  isDeleted: boolean;
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
@@ -147,3 +150,4 @@ LocationSchema.index({ heartCount: 1 });
 LocationSchema.index({ createdAt: 1 });
 LocationSchema.index({ location: '2dsphere' });
 LocationSchema.index({ userId: 1 });
+LocationSchema.index({ isDeleted: 1 });
