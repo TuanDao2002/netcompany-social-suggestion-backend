@@ -18,7 +18,7 @@ import { Type } from 'class-transformer';
 export class StartTime {
   @IsNumber()
   @Min(0)
-  @Max(24)
+  @Max(23)
   hours: number;
 
   @IsNumber()

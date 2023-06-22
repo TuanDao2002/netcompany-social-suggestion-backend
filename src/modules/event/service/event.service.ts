@@ -7,41 +7,56 @@ import {
 import { EventRepository } from '../repository/event.repository';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UserDocument } from '../../user/schema/users.schema';
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 import { EventFilterType } from '../../../common/event-filter-type.enum';
 import mongoose from 'mongoose';
 import { EventDocument } from '../schema/event.schema';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { Response } from 'express';
+import { Utils } from '../../../common/utils';
 
 @Injectable()
 export class EventService {
   constructor(private readonly eventRepository: EventRepository) {}
 
-  public async createEvent(eventData: CreateEventDto, user: UserDocument) {
+  public async createEvent(
+    eventData: CreateEventDto,
+    user: UserDocument,
+  ): Promise<EventDocument> {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
     const { startDate, startTime, duration, allDay } = eventData;
-    let luxonDate = DateTime.fromISO(startDate.toString(), { setZone: true });
+    let luxonStartDateTime = DateTime.fromISO(startDate.toString(), {
+      setZone: true,
+    });
     if (allDay) {
-      luxonDate = luxonDate.set({ hour: 0, minute: 0 });
+      luxonStartDateTime = luxonStartDateTime.set({ hour: 0, minute: 0 });
       eventData.duration = null;
     } else if (startTime && duration) {
       const { hours, minutes } = startTime;
-      luxonDate = luxonDate.set({ hour: hours, minute: minutes });
+      luxonStartDateTime = luxonStartDateTime.set({
+        hour: hours,
+        minute: minutes,
+      });
     } else {
       throw new BadRequestException(
         'Please enter start time and duration of the event',
       );
     }
 
-    if (luxonDate.toUTC() <= DateTime.local().toUTC()) {
+    if (luxonStartDateTime.toUTC() <= DateTime.local().toUTC()) {
       throw new BadRequestException(
         'Please enter a start date and time in the future',
       );
     }
+
+    // do this to account for DST and leap years
+    const luxonDuration = Duration.fromObject(duration)
+      .shiftTo('years', 'months', 'days', 'hours', 'minutes')
+      .toObject();
+    const luxonExpiredDateTime = luxonStartDateTime.plus(luxonDuration);
 
     eventData.guests = Array.from(new Set(eventData.guests)) as [string];
 
@@ -49,7 +64,11 @@ export class EventService {
     delete eventData.startTime;
 
     return await this.eventRepository.createEvent(
-      { ...eventData, startDateTime: luxonDate.toUTC().toBSON() },
+      {
+        ...eventData,
+        startDateTime: luxonStartDateTime.toUTC().toBSON(),
+        expiredAt: luxonExpiredDateTime.toUTC().toBSON(),
+      },
       user,
     );
   }
@@ -75,6 +94,30 @@ export class EventService {
       queryObject.guests = new mongoose.Types.ObjectId(user._id);
     }
 
+    if (filterType === EventFilterType.PAST) {
+      queryObject.expiredAt = { $lte: new Date() };
+    } else {
+      queryObject.expiredAt = { $gt: new Date() };
+    }
+
+    return await this.eventRepository.filterEvent(queryObject, next_cursor);
+  }
+
+  public async searchEventByInput(
+    input: string,
+    next_cursor: string,
+  ): Promise<{
+    results: any[];
+    next_cursor: string;
+  }> {
+    let queryObject: any = {};
+    const formattedSearchInput = Utils.removeSpace(
+      String(input).replace(/[^\p{L}\d\s]/giu, ''),
+    );
+    if (formattedSearchInput) {
+      const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
+      queryObject.name = { $regex: `${regexPattern}`, $options: 'i' };
+    }
     return await this.eventRepository.filterEvent(queryObject, next_cursor);
   }
 
@@ -112,20 +155,25 @@ export class EventService {
       throw new UnauthorizedException('Not allowed to edit this event');
     }
 
-    let luxonDate = DateTime.fromISO(startDate.toString(), { setZone: true });
+    let luxonStartDateTime = DateTime.fromISO(startDate.toString(), {
+      setZone: true,
+    });
     if (allDay) {
-      luxonDate = luxonDate.set({ hour: 0, minute: 0 });
+      luxonStartDateTime = luxonStartDateTime.set({ hour: 0, minute: 0 });
       updateEventData.duration = null;
     } else if (startTime && duration) {
       const { hours, minutes } = startTime;
-      luxonDate = luxonDate.set({ hour: hours, minute: minutes });
+      luxonStartDateTime = luxonStartDateTime.set({
+        hour: hours,
+        minute: minutes,
+      });
     } else {
       throw new BadRequestException(
         'Please enter start time and duration of the event',
       );
     }
 
-    if (luxonDate.toUTC() <= DateTime.local().toUTC()) {
+    if (luxonStartDateTime.toUTC() <= DateTime.local().toUTC()) {
       throw new BadRequestException(
         'Please enter a start date and time in the future',
       );
@@ -135,12 +183,19 @@ export class EventService {
       string,
     ];
 
+    // do this to account for DST and leap years
+    const luxonDuration = Duration.fromObject(duration)
+      .shiftTo('years', 'months', 'days', 'hours', 'minutes')
+      .toObject();
+    const luxonExpiredDateTime = luxonStartDateTime.plus(luxonDuration);
+
     delete updateEventData.startDate;
     delete updateEventData.startTime;
 
     return await this.eventRepository.updateEvent({
       ...updateEventData,
-      startDateTime: luxonDate.toUTC().toBSON(),
+      startDateTime: luxonStartDateTime.toUTC().toBSON(),
+      expiredAt: luxonExpiredDateTime.toUTC().toBSON(),
     });
   }
 
