@@ -115,11 +115,11 @@ export class LocationService {
       throw new UnauthorizedException('Not allowed to delete this location');
     }
 
-    await this.locationRepository.deleteLocation(locationId);
+    await this.locationRepository.softDeleteLocation(locationId);
     res.json({ msg: 'The location is deleted' });
 
-    await this.likeLocationRepository.removeLikesOfLocation(locationId);
-    await this.eventRepository.updateEventsOrganizedAtLocation(locationId);
+    // await this.likeLocationRepository.removeLikesOfLocation(locationId);
+    // await this.eventRepository.updateEventsOrganizedAtLocation(locationId);
   }
 
   public async viewCreatedLocation(

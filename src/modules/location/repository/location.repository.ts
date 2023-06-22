@@ -27,7 +27,10 @@ export class LocationRepository {
   }
 
   public async findOneById(locationId: string): Promise<LocationDocument> {
-    return await this.locationModel.findById(locationId);
+    return await this.locationModel.findOne({
+      _id: locationId,
+      isDeleted: { $ne: true }, // find location not soft-deleted
+    });
   }
 
   public async updateLocation(
@@ -45,8 +48,11 @@ export class LocationRepository {
     );
   }
 
-  public async deleteLocation(locationId: string): Promise<void> {
-    await this.locationModel.deleteOne({ _id: locationId });
+  public async softDeleteLocation(locationId: string): Promise<void> {
+    await this.locationModel.updateOne(
+      { _id: locationId },
+      { isDeleted: true },
+    );
   }
 
   public async findDuplicate(
@@ -59,6 +65,7 @@ export class LocationRepository {
     const duplicateLocation = await this.locationModel.findOne({
       name,
       placeId,
+      isDeleted: { $ne: true }, // find location not soft-deleted
     });
 
     return duplicateLocation
@@ -75,6 +82,7 @@ export class LocationRepository {
     results: any[];
     next_cursor: string;
   }> {
+    queryObject.isDeleted = { $ne: true }; // only show location not soft-deleted
     let sortingQuery: any = {};
     if (sortType === LocationSortingType.FEATURED) {
       sortingQuery = { heartCount: -1, createdAt: -1, _id: -1 };
