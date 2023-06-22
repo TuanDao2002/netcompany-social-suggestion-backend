@@ -86,18 +86,30 @@ export class EventService {
     }
 
     let queryObject: any = {};
+    if (filterType === EventFilterType.ALL) {
+      queryObject.$or = [
+        { userId: new mongoose.Types.ObjectId(user._id) },
+        { guests: new mongoose.Types.ObjectId(user._id) },
+      ];
+      queryObject.expiredAt = { $gt: new Date() };
+    }
+
     if (filterType === EventFilterType.CREATED) {
       queryObject.userId = new mongoose.Types.ObjectId(user._id);
+      queryObject.expiredAt = { $gt: new Date() };
     }
 
     if (filterType === EventFilterType.INVITED) {
       queryObject.guests = new mongoose.Types.ObjectId(user._id);
+      queryObject.expiredAt = { $gt: new Date() };
     }
 
     if (filterType === EventFilterType.PAST) {
+      queryObject.$or = [
+        { userId: new mongoose.Types.ObjectId(user._id) },
+        { guests: new mongoose.Types.ObjectId(user._id) },
+      ];
       queryObject.expiredAt = { $lte: new Date() };
-    } else {
-      queryObject.expiredAt = { $gt: new Date() };
     }
 
     return await this.eventRepository.filterEvent(queryObject, next_cursor);
