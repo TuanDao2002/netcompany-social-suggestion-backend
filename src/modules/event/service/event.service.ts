@@ -33,7 +33,7 @@ export class EventService {
     });
     if (allDay) {
       luxonStartDateTime = luxonStartDateTime.set({ hour: 0, minute: 0 });
-      eventData.duration = null;
+      eventData.duration = { hours: 24, minutes: 0 };
     } else if (startTime && duration) {
       const { hours, minutes } = startTime;
       luxonStartDateTime = luxonStartDateTime.set({
@@ -53,7 +53,7 @@ export class EventService {
     }
 
     // do this to account for DST and leap years
-    const luxonDuration = Duration.fromObject(duration)
+    const luxonDuration = Duration.fromObject(eventData.duration)
       .shiftTo('years', 'months', 'days', 'hours', 'minutes')
       .toObject();
     const luxonExpiredDateTime = luxonStartDateTime.plus(luxonDuration);
@@ -184,7 +184,7 @@ export class EventService {
     });
     if (allDay) {
       luxonStartDateTime = luxonStartDateTime.set({ hour: 0, minute: 0 });
-      updateEventData.duration = null;
+      updateEventData.duration = { hours: 24, minutes: 0 };
     } else if (startTime && duration) {
       const { hours, minutes } = startTime;
       luxonStartDateTime = luxonStartDateTime.set({
@@ -208,7 +208,7 @@ export class EventService {
     ];
 
     // do this to account for DST and leap years
-    const luxonDuration = Duration.fromObject(duration)
+    const luxonDuration = Duration.fromObject(updateEventData.duration)
       .shiftTo('years', 'months', 'days', 'hours', 'minutes')
       .toObject();
     const luxonExpiredDateTime = luxonStartDateTime.plus(luxonDuration);
@@ -246,58 +246,11 @@ export class EventService {
 
   public filterAvailableEvents(): any {
     const currentDateTime = new Date();
-    const currentDate = new Date(
-      currentDateTime.getUTCFullYear(),
-      currentDateTime.getUTCMonth(),
-      currentDateTime.getUTCDate(),
-      0,
-      0,
-      0,
-    );
-
-    return {
-      $or: [
-        {
-          $and: [
-            { allDay: { $eq: false } },
-            { $expr: { $gt: ['$expiredAt', currentDateTime] } },
-          ],
-        },
-        {
-          $and: [
-            { allDay: { $eq: true } },
-            { $expr: { $gt: ['$startDateTime', currentDate] } },
-          ],
-        },
-      ],
-    };
+    return { $expr: { $gt: ['$expiredAt', currentDateTime] } };
   }
 
   public filterExpiredEvents(): any {
     const currentDateTime = new Date();
-    const currentDate = new Date(
-      currentDateTime.getUTCFullYear(),
-      currentDateTime.getUTCMonth(),
-      currentDateTime.getUTCDate(),
-      0,
-      0,
-      0,
-    );
-    return {
-      $or: [
-        {
-          $and: [
-            { allDay: { $eq: false } },
-            { $expr: { $lte: ['$expiredAt', currentDateTime] } },
-          ],
-        },
-        {
-          $and: [
-            { allDay: { $eq: true } },
-            { $expr: { $lte: ['$startDateTime', currentDate] } },
-          ],
-        },
-      ],
-    };
+    return { $expr: { $lte: ['$expiredAt', currentDateTime] } };
   }
 }
