@@ -87,29 +87,41 @@ export class EventService {
 
     let queryObject: any = {};
     if (filterType === EventFilterType.ALL) {
-      queryObject.$or = [
-        { userId: new mongoose.Types.ObjectId(user._id) },
-        { guests: new mongoose.Types.ObjectId(user._id) },
+      queryObject.$and = [
+        {
+          $or: [
+            { userId: new mongoose.Types.ObjectId(user._id) },
+            { guests: new mongoose.Types.ObjectId(user._id) },
+          ],
+        },
+        this.filterAvailableEvents(),
       ];
-      queryObject.expiredAt = { $gt: new Date() };
     }
 
     if (filterType === EventFilterType.CREATED) {
-      queryObject.userId = new mongoose.Types.ObjectId(user._id);
-      queryObject.expiredAt = { $gt: new Date() };
+      queryObject.$and = [
+        { userId: new mongoose.Types.ObjectId(user._id) },
+        this.filterAvailableEvents(),
+      ];
     }
 
     if (filterType === EventFilterType.INVITED) {
-      queryObject.guests = new mongoose.Types.ObjectId(user._id);
-      queryObject.expiredAt = { $gt: new Date() };
+      queryObject.$and = [
+        { guests: new mongoose.Types.ObjectId(user._id) },
+        this.filterAvailableEvents(),
+      ];
     }
 
     if (filterType === EventFilterType.PAST) {
-      queryObject.$or = [
-        { userId: new mongoose.Types.ObjectId(user._id) },
-        { guests: new mongoose.Types.ObjectId(user._id) },
+      queryObject.$and = [
+        {
+          $or: [
+            { userId: new mongoose.Types.ObjectId(user._id) },
+            { guests: new mongoose.Types.ObjectId(user._id) },
+          ],
+        },
+        this.filterExpiredEvents(),
       ];
-      queryObject.expiredAt = { $lte: new Date() };
     }
 
     return await this.eventRepository.filterEvent(queryObject, next_cursor);
@@ -230,5 +242,62 @@ export class EventService {
 
   public isOwner(user: UserDocument, existingEvent: EventDocument): boolean {
     return String(user._id) === String(existingEvent.userId);
+  }
+
+  public filterAvailableEvents(): any {
+    const currentDateTime = new Date();
+    const currentDate = new Date(
+      currentDateTime.getUTCFullYear(),
+      currentDateTime.getUTCMonth(),
+      currentDateTime.getUTCDate(),
+      0,
+      0,
+      0,
+    );
+
+    return {
+      $or: [
+        {
+          $and: [
+            { allDay: { $eq: false } },
+            { $expr: { $gt: ['$expiredAt', currentDateTime] } },
+          ],
+        },
+        {
+          $and: [
+            { allDay: { $eq: true } },
+            { $expr: { $gt: ['$startDateTime', currentDate] } },
+          ],
+        },
+      ],
+    };
+  }
+
+  public filterExpiredEvents(): any {
+    const currentDateTime = new Date();
+    const currentDate = new Date(
+      currentDateTime.getUTCFullYear(),
+      currentDateTime.getUTCMonth(),
+      currentDateTime.getUTCDate(),
+      0,
+      0,
+      0,
+    );
+    return {
+      $or: [
+        {
+          $and: [
+            { allDay: { $eq: false } },
+            { $expr: { $lte: ['$expiredAt', currentDateTime] } },
+          ],
+        },
+        {
+          $and: [
+            { allDay: { $eq: true } },
+            { $expr: { $lte: ['$startDateTime', currentDate] } },
+          ],
+        },
+      ],
+    };
   }
 }
