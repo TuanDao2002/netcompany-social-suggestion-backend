@@ -76,6 +76,7 @@ export class EventService {
   public async filterEvent(
     filterType: EventFilterType,
     next_cursor: string,
+    searchInput: string,
     user: UserDocument,
   ): Promise<{
     results: any[];
@@ -86,6 +87,19 @@ export class EventService {
     }
 
     let queryObject: any = {};
+
+    if (searchInput) {
+      const formattedSearchInput = Utils.removeSpace(
+        String(searchInput).replace(/[^\p{L}\d\s]/giu, ''),
+      );
+      if (formattedSearchInput) {
+        const regexPattern = `.*${formattedSearchInput
+          .split(' ')
+          .join('.*')}.*`;
+        queryObject.name = { $regex: `${regexPattern}`, $options: 'i' };
+      }
+    }
+
     if (filterType === EventFilterType.ALL) {
       queryObject.$and = [
         {
@@ -124,24 +138,6 @@ export class EventService {
       ];
     }
 
-    return await this.eventRepository.filterEvent(queryObject, next_cursor);
-  }
-
-  public async searchEventByInput(
-    input: string,
-    next_cursor: string,
-  ): Promise<{
-    results: any[];
-    next_cursor: string;
-  }> {
-    let queryObject: any = {};
-    const formattedSearchInput = Utils.removeSpace(
-      String(input).replace(/[^\p{L}\d\s]/giu, ''),
-    );
-    if (formattedSearchInput) {
-      const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
-      queryObject.name = { $regex: `${regexPattern}`, $options: 'i' };
-    }
     return await this.eventRepository.filterEvent(queryObject, next_cursor);
   }
 
