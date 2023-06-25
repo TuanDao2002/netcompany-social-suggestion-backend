@@ -41,12 +41,18 @@ export class EventController {
   async filterEvent(
     @Param('filterType') filterType: EventFilterType,
     @Query('next_cursor') next_cursor: string,
+    @Query('searchInput') searchInput: string,
     @CurrentUser() user: UserDocument,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
-    return await this.eventService.filterEvent(filterType, next_cursor, user);
+    return await this.eventService.filterEvent(
+      filterType,
+      next_cursor,
+      searchInput,
+      user,
+    );
   }
 
   @HttpCode(HttpStatus.OK)
@@ -75,17 +81,5 @@ export class EventController {
     @Res() res: Response,
   ): Promise<void> {
     await this.eventService.deleteEvent(eventId, user, res);
-  }
-
-  @HttpCode(HttpStatus.OK)
-  @Get('search/:name')
-  async searchEventByName(
-    @Query('next_cursor') next_cursor: string,
-    @Param('name') name: string,
-  ): Promise<{
-    results: any[];
-    next_cursor: string;
-  }> {
-    return await this.eventService.searchEventByInput(name, next_cursor);
   }
 }
