@@ -1,8 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
-import { Location } from 'src/modules/location/schema/locations.schema';
-import { User } from '../../user/schema/users.schema';
-import { Itinerary } from './itinerary.schema';
+import { Location } from '../../location/schema/locations.schema';
+import { CommonConstant } from '../../../common/constant';
 
 export type ItineraryLocationDocument = HydratedDocument<ItineraryLocation>;
 
@@ -10,14 +9,7 @@ export type ItineraryLocationDocument = HydratedDocument<ItineraryLocation>;
 export class ItineraryLocation {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: User.name,
-    required: true,
-  })
-  userId: Types.ObjectId;
-
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: Itinerary.name,
+    ref: 'itineraries',
     required: true,
   })
   itineraryId: Types.ObjectId;
@@ -30,10 +22,15 @@ export class ItineraryLocation {
   locationId: Types.ObjectId;
 
   @Prop({
-    required: true
+    required: false,
+    trim: true,
+    default: '',
+    maxlength: CommonConstant.ITINERARY_LOCATIONS_NOTE_LIMIT,
   })
-  index: number;
+  note: string;
 }
 
-export const ItineraryLocationSchema = SchemaFactory.createForClass(ItineraryLocation);
-ItineraryLocationSchema.index({ userId: 1 });
+export const ItineraryLocationSchema =
+  SchemaFactory.createForClass(ItineraryLocation);
+ItineraryLocationSchema.index({ itineraryId: 1 });
+ItineraryLocationSchema.index({ locationId: 1 });

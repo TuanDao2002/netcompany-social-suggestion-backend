@@ -18,6 +18,10 @@ export class ItineraryService {
     itineraryData: CreateItineraryDto,
     user: UserDocument,
   ): Promise<ItineraryDocument> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
     return await this.itineraryRepository.createItinerary(itineraryData, user);
   }
 
@@ -25,6 +29,10 @@ export class ItineraryService {
     next_cursor: string,
     user: UserDocument,
   ) {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
     return await this.itineraryRepository.viewPrivateItineraryList(
       next_cursor,
       {
@@ -61,6 +69,10 @@ export class ItineraryService {
     user: UserDocument,
     res: Response,
   ) {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+    
     const existingItinerary = await this.itineraryRepository.findItineraryById(
       itineraryId,
     );

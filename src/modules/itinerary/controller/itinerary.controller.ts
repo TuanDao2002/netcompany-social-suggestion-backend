@@ -20,11 +20,17 @@ import { CurrentUser } from '../../auth/guard/user.decorator';
 import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateItineraryDto } from '../dto/update-itinerary.dto';
 import { Response } from 'express';
+import { CreateItineraryLocationDto } from '../dto/create-itinerary-location.dto';
+import { ItineraryLocationDocument } from '../schema/itinerary-location.schema';
+import { ItineraryLocationService } from '../service/itinerary-location.service';
 
 @Controller('itinerary')
 @UseGuards(JwtGuard)
 export class ItineraryController {
-  constructor(private readonly itineraryService: ItineraryService) {}
+  constructor(
+    private readonly itineraryService: ItineraryService,
+    private readonly itineraryLocationService: ItineraryLocationService,
+  ) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('')
@@ -67,5 +73,17 @@ export class ItineraryController {
     @Res() res: Response,
   ): Promise<void> {
     await this.itineraryService.deleteItinerary(itineraryId, user, res);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('location/save')
+  async saveItineraryLocation(
+    @Body() body: CreateItineraryLocationDto,
+    @CurrentUser() user: UserDocument,
+  ): Promise<ItineraryLocationDocument> {
+    return await this.itineraryLocationService.createItineraryLocation(
+      body,
+      user,
+    );
   }
 }

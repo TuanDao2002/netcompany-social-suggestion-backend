@@ -114,6 +114,16 @@ export class ItineraryRepository {
     );
   }
 
+  public async addLocationToItinerary(
+    itineraryId: string,
+    itineraryLocationId: string,
+  ): Promise<mongoose.mongo.UpdateResult> {
+    return await this.itineraryModel.updateOne(
+      { _id: itineraryId },
+      { $push: { savedLocations: itineraryLocationId } },
+    );
+  }
+
   public async deleteItinerary(itineraryId: string): Promise<void> {
     await this.itineraryModel.deleteOne({ _id: itineraryId });
   }
