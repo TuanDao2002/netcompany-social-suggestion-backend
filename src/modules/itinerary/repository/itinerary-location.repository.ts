@@ -6,7 +6,7 @@ import {
   ItineraryLocationDocument,
 } from '../schema/itinerary-location.schema';
 import { CreateItineraryLocationDto } from '../dto/create-itinerary-location.dto';
-import { UserDocument } from '../../user/schema/users.schema';
+import { UpdateItineraryLocationDto } from '../dto/update-itinerary-location.dto';
 
 @Injectable()
 export class ItineraryLocationRepository {
@@ -23,6 +23,12 @@ export class ItineraryLocationRepository {
     });
   }
 
+  public async findItineraryLocationById(
+    itineraryLocationId: string,
+  ): Promise<ItineraryLocationDocument> {
+    return await this.itineraryLocationModel.findById(itineraryLocationId);
+  }
+
   public async findDuplicateItineraryLocation(
     itineraryId: string,
     locationId: string,
@@ -34,7 +40,7 @@ export class ItineraryLocationRepository {
   }
 
   public async updateItineraryLocation(
-    updateItineraryLocationData: any,
+    updateItineraryLocationData: UpdateItineraryLocationDto,
   ): Promise<ItineraryLocationDocument> {
     return await this.itineraryLocationModel.findOneAndUpdate(
       {

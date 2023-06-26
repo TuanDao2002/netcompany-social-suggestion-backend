@@ -58,7 +58,7 @@ export class ItineraryService {
     }
 
     if (!this.isOwner(user, existingItinerary)) {
-      throw new UnauthorizedException('Not allowed to edit this location');
+      throw new UnauthorizedException('Not allowed to edit this itinerary');
     }
 
     return await this.itineraryRepository.updateItinerary(updateItineraryData);
@@ -80,7 +80,7 @@ export class ItineraryService {
       throw new NotFoundException('This itinerary does not exist');
     }
     if (!this.isOwner(user, existingItinerary)) {
-      throw new UnauthorizedException('Not allowed to delete this event');
+      throw new UnauthorizedException('Not allowed to delete this itinerary');
     }
 
     await this.itineraryRepository.deleteItinerary(itineraryId);

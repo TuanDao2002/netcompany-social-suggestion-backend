@@ -23,6 +23,7 @@ import { Response } from 'express';
 import { CreateItineraryLocationDto } from '../dto/create-itinerary-location.dto';
 import { ItineraryLocationDocument } from '../schema/itinerary-location.schema';
 import { ItineraryLocationService } from '../service/itinerary-location.service';
+import { UpdateItineraryLocationDto } from '../dto/update-itinerary-location.dto';
 
 @Controller('itinerary')
 @UseGuards(JwtGuard)
@@ -82,6 +83,18 @@ export class ItineraryController {
     @CurrentUser() user: UserDocument,
   ): Promise<ItineraryLocationDocument> {
     return await this.itineraryLocationService.createItineraryLocation(
+      body,
+      user,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Patch('location/update')
+  async updateItineraryLocation(
+    @Body() body: UpdateItineraryLocationDto,
+    @CurrentUser() user: UserDocument,
+  ): Promise<ItineraryLocationDocument> {
+    return await this.itineraryLocationService.updateItineraryLocation(
       body,
       user,
     );
