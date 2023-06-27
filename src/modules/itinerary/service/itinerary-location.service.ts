@@ -13,6 +13,7 @@ import { LocationRepository } from '../../location/repository/location.repositor
 import { CommonConstant } from '../../../common/constant';
 import { ItineraryService } from './itinerary.service';
 import { UpdateItineraryLocationDto } from '../dto/update-itinerary-location.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class ItineraryLocationService {
@@ -100,7 +101,7 @@ export class ItineraryLocationService {
       );
     if (!existingItineraryLocation) {
       throw new NotFoundException(
-        'This location is not saved in this itinerary',
+        'This location is not saved in this itinerary or the itinerary does not exist',
       );
     }
 
@@ -114,12 +115,58 @@ export class ItineraryLocationService {
 
     if (!this.itineraryService.isOwner(user, existingItinerary)) {
       throw new UnauthorizedException(
-        'Not allowed to update the location in this itinerary',
+        'Not allowed to update location in this itinerary',
       );
     }
 
     return await this.itineraryLocationRepository.updateItineraryLocation(
       updateItineraryLocationData,
     );
+  }
+
+  public async deletedItineraryLocation(
+    itineraryLocationId: string,
+    user: UserDocument,
+    res: Response,
+  ) {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
+    const existingItineraryLocation =
+      await this.itineraryLocationRepository.findItineraryLocationById(
+        itineraryLocationId,
+      );
+    if (!existingItineraryLocation) {
+      throw new NotFoundException(
+        'This location is not saved in this itinerary or the itinerary does not exist',
+      );
+    }
+
+    const { itineraryId } = existingItineraryLocation;
+    const existingItinerary = await this.itineraryRepository.findItineraryById(
+      String(itineraryId),
+    );
+    if (!existingItinerary) {
+      throw new NotFoundException('The itinerary no longer exists');
+    }
+
+    if (!this.itineraryService.isOwner(user, existingItinerary)) {
+      throw new UnauthorizedException(
+        'Not allowed to remove location in this itinerary',
+      );
+    }
+
+    await Promise.all([
+      this.itineraryLocationRepository.deleteItineraryLocation(
+        itineraryLocationId,
+      ),
+      this.itineraryRepository.removeLocationFromItinerary(
+        String(itineraryId),
+        itineraryLocationId,
+      ),
+    ]);
+
+    res.json({ msg: 'The location is removed from this itinerary' });
   }
 }

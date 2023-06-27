@@ -58,4 +58,8 @@ export class ItineraryLocationRepository {
   ): Promise<void> {
     await this.itineraryLocationModel.deleteOne({ _id: itineraryLocationId });
   }
+
+  public async deleteLocationsInItinerary(itineraryId: string): Promise<void> {
+    await this.itineraryLocationModel.deleteMany({ itineraryId });
+  }
 }

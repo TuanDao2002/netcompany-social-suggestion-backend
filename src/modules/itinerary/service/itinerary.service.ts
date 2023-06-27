@@ -9,10 +9,14 @@ import { ItineraryDocument } from '../schema/itinerary.schema';
 import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateItineraryDto } from '../dto/update-itinerary.dto';
 import { Response } from 'express';
+import { ItineraryLocationRepository } from '../repository/itinerary-location.repository';
 
 @Injectable()
 export class ItineraryService {
-  constructor(private readonly itineraryRepository: ItineraryRepository) {}
+  constructor(
+    private readonly itineraryRepository: ItineraryRepository,
+    private readonly itineraryLocationRepository: ItineraryLocationRepository,
+  ) {}
 
   public async createItinerary(
     itineraryData: CreateItineraryDto,
@@ -33,12 +37,9 @@ export class ItineraryService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    return await this.itineraryRepository.viewPrivateItineraryList(
-      next_cursor,
-      {
-        userId: user._id,
-      },
-    );
+    return await this.itineraryRepository.getItineraryList(next_cursor, {
+      userId: user._id,
+    });
   }
 
   public async updateItinerary(
@@ -72,7 +73,7 @@ export class ItineraryService {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
     }
-    
+
     const existingItinerary = await this.itineraryRepository.findItineraryById(
       itineraryId,
     );
@@ -85,6 +86,10 @@ export class ItineraryService {
 
     await this.itineraryRepository.deleteItinerary(itineraryId);
     res.json({ msg: 'The itinerary is deleted' });
+
+    await this.itineraryLocationRepository.deleteLocationsInItinerary(
+      itineraryId,
+    );
   }
 
   public isOwner(

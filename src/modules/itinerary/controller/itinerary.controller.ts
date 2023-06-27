@@ -19,11 +19,11 @@ import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { CurrentUser } from '../../auth/guard/user.decorator';
 import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateItineraryDto } from '../dto/update-itinerary.dto';
-import { Response } from 'express';
 import { CreateItineraryLocationDto } from '../dto/create-itinerary-location.dto';
 import { ItineraryLocationDocument } from '../schema/itinerary-location.schema';
 import { ItineraryLocationService } from '../service/itinerary-location.service';
 import { UpdateItineraryLocationDto } from '../dto/update-itinerary-location.dto';
+import { Response } from 'express';
 
 @Controller('itinerary')
 @UseGuards(JwtGuard)
@@ -97,6 +97,20 @@ export class ItineraryController {
     return await this.itineraryLocationService.updateItineraryLocation(
       body,
       user,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete('location/delete/:itineraryLocationId')
+  async deleteItineraryLocation(
+    @Param('itineraryLocationId') itineraryLocationId: string,
+    @CurrentUser() user: UserDocument,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.itineraryLocationService.deletedItineraryLocation(
+      itineraryLocationId,
+      user,
+      res,
     );
   }
 }

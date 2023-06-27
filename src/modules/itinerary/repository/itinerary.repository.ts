@@ -24,22 +24,22 @@ export class ItineraryRepository {
     });
   }
 
-  public async viewPrivateItineraryList(
+  public async getItineraryList(
     next_cursor: string,
     queryObject: any,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
-    let sortingQuery = { createdAt: 1, _id: 1 };
+    let sortingQuery = { createdAt: -1, _id: -1 };
     if (next_cursor) {
       const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
         .toString('ascii')
         .split('_');
 
       const [createdAt, _id] = decodedFromNextCursor;
-      queryObject.createdAt = { $gte: new Date(createdAt) };
-      queryObject._id = { $gt: new mongoose.Types.ObjectId(_id) };
+      queryObject.createdAt = { $lte: new Date(createdAt) };
+      queryObject._id = { $lt: new mongoose.Types.ObjectId(_id) };
     }
 
     let filterPipelineStage: any[] = [
@@ -55,6 +55,7 @@ export class ItineraryRepository {
       {
         $project: {
           userId: 0,
+          savedLocations: 0,
         },
       },
     ];
@@ -121,6 +122,16 @@ export class ItineraryRepository {
     return await this.itineraryModel.updateOne(
       { _id: itineraryId },
       { $push: { savedLocations: itineraryLocationId } },
+    );
+  }
+
+  public async removeLocationFromItinerary(
+    itineraryId: string,
+    itineraryLocationId: string,
+  ) {
+    return await this.itineraryModel.updateOne(
+      { _id: itineraryId },
+      { $pull: { savedLocations: itineraryLocationId } },
     );
   }
 
