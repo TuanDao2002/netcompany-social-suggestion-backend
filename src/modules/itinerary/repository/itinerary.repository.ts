@@ -138,4 +138,70 @@ export class ItineraryRepository {
   public async deleteItinerary(itineraryId: string): Promise<void> {
     await this.itineraryModel.deleteOne({ _id: itineraryId });
   }
+
+  public async getSavedLocationsInItinerary(
+    itineraryId: string,
+  ): Promise<any[]> {
+    let filterPipelineStage: any[] = [
+      {
+        $match: { _id: new mongoose.Types.ObjectId(itineraryId) },
+      },
+      {
+        $limit: 1,
+      },
+      {
+        $unwind: '$savedLocations',
+      },
+      {
+        $lookup: {
+          from: 'itinerarylocations',
+          localField: 'savedLocations',
+          foreignField: '_id',
+          as: 'savedLocations',
+        },
+      },
+      { $unwind: '$savedLocations' },
+      {
+        $lookup: {
+          from: 'locations',
+          localField: 'savedLocations.locationId',
+          foreignField: '_id',
+          as: 'savedLocations.location',
+        },
+      },
+      { $unwind: '$savedLocations.location' },
+      {
+        $group: {
+          // do this to populate locationId inside each itineraryLocationId
+          _id: '$_id',
+          userId: { $first: '$userId' },
+          name: { $first: '$name' },
+          savedLocations: { $push: '$savedLocations' },
+        },
+      },
+      {
+        $project: {
+          savedLocations: {
+            itineraryId: 0,
+            locationId: 0,
+            location: {
+              placeId: 0,
+              nameAddress: 0,
+              location: 0,
+              description: 0,
+              imageUrls: 0,
+              locationCategory: 0,
+              pricePerPerson: 0,
+              weekday: 0,
+              weekend: 0,
+              heartCount: 0,
+              userId: 0,
+            },
+          },
+        },
+      },
+    ];
+
+    return await this.itineraryModel.aggregate(filterPipelineStage);
+  }
 }

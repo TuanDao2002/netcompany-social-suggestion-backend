@@ -92,6 +92,30 @@ export class ItineraryService {
     );
   }
 
+  public async viewSavedLocationInItinerary(
+    itineraryId: string,
+    user: UserDocument,
+  ): Promise<ItineraryDocument> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
+    const findItinerary =
+      await this.itineraryRepository.getSavedLocationsInItinerary(itineraryId);
+
+    if (findItinerary.length === 0) {
+      throw new NotFoundException('This itinerary does not exist');
+    }
+
+    if (!this.isOwner(user, findItinerary[0])) {
+      throw new UnauthorizedException(
+        'Now allowed to view saved locations in this itinerary',
+      );
+    }
+
+    return findItinerary[0];
+  }
+
   public isOwner(
     user: UserDocument,
     existingItinerary: ItineraryDocument,

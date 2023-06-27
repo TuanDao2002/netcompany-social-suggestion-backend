@@ -58,6 +58,18 @@ export class ItineraryController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @Get(':itineraryId')
+  async viewDetailedItinerary(
+    @Param('itineraryId') itineraryId: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<ItineraryDocument> {
+    return await this.itineraryService.viewSavedLocationInItinerary(
+      itineraryId,
+      user,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
   @Patch('')
   async updateItinerary(
     @Body() body: UpdateItineraryDto,

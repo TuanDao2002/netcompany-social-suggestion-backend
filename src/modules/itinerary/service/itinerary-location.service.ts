@@ -110,7 +110,7 @@ export class ItineraryLocationService {
       String(itineraryId),
     );
     if (!existingItinerary) {
-      throw new NotFoundException('The itinerary no longer exists');
+      throw new NotFoundException('The itinerary does not exist');
     }
 
     if (!this.itineraryService.isOwner(user, existingItinerary)) {
@@ -128,7 +128,7 @@ export class ItineraryLocationService {
     itineraryLocationId: string,
     user: UserDocument,
     res: Response,
-  ) {
+  ): Promise<void> {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
     }
@@ -148,7 +148,7 @@ export class ItineraryLocationService {
       String(itineraryId),
     );
     if (!existingItinerary) {
-      throw new NotFoundException('The itinerary no longer exists');
+      throw new NotFoundException('The itinerary does not exist');
     }
 
     if (!this.itineraryService.isOwner(user, existingItinerary)) {
