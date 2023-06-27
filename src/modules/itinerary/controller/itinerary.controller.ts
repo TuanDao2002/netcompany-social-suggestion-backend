@@ -24,6 +24,7 @@ import { ItineraryLocationDocument } from '../schema/itinerary-location.schema';
 import { ItineraryLocationService } from '../service/itinerary-location.service';
 import { UpdateItineraryLocationDto } from '../dto/update-itinerary-location.dto';
 import { Response } from 'express';
+import { UpdateItineraryLocationOrderDto } from '../dto/update-itinerary-location-order.dto';
 
 @Controller('itinerary')
 @UseGuards(JwtGuard)
@@ -123,6 +124,18 @@ export class ItineraryController {
       itineraryLocationId,
       user,
       res,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Patch('location/order')
+  async updateItineraryLocationOrder(
+    @Body() body: UpdateItineraryLocationOrderDto,
+    @CurrentUser() user: UserDocument,
+  ): Promise<ItineraryDocument> {
+    return await this.itineraryService.updateLocationOrderInItinerary(
+      body,
+      user,
     );
   }
 }

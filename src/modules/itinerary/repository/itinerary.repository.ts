@@ -5,7 +5,6 @@ import mongoose, { Model } from 'mongoose';
 import { CreateItineraryDto } from '../dto/create-itinerary.dto';
 import { UserDocument } from '../../user/schema/users.schema';
 import { CommonConstant } from '../../../common/constant';
-import { UpdateItineraryDto } from '../dto/update-itinerary.dto';
 
 @Injectable()
 export class ItineraryRepository {
@@ -102,7 +101,7 @@ export class ItineraryRepository {
   }
 
   public async updateItinerary(
-    updateItineraryData: UpdateItineraryDto,
+    updateItineraryData: any,
   ): Promise<ItineraryDocument> {
     return await this.itineraryModel.findOneAndUpdate(
       {

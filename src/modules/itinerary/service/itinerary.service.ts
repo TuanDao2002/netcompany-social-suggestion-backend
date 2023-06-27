@@ -10,6 +10,7 @@ import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateItineraryDto } from '../dto/update-itinerary.dto';
 import { Response } from 'express';
 import { ItineraryLocationRepository } from '../repository/itinerary-location.repository';
+import { UpdateItineraryLocationOrderDto } from '../dto/update-itinerary-location-order.dto';
 
 @Injectable()
 export class ItineraryService {
@@ -43,7 +44,7 @@ export class ItineraryService {
   }
 
   public async updateItinerary(
-    updateItineraryData: UpdateItineraryDto,
+    updateItineraryData: UpdateItineraryDto | UpdateItineraryLocationOrderDto,
     user: UserDocument,
   ): Promise<ItineraryDocument> {
     if (!user) {
@@ -63,6 +64,13 @@ export class ItineraryService {
     }
 
     return await this.itineraryRepository.updateItinerary(updateItineraryData);
+  }
+
+  public async updateLocationOrderInItinerary(
+    updateItineraryLocationOrderDto: UpdateItineraryLocationOrderDto,
+    user: UserDocument,
+  ): Promise<ItineraryDocument> {
+    return await this.updateItinerary(updateItineraryLocationOrderDto, user);
   }
 
   public async deleteItinerary(
