@@ -188,7 +188,6 @@ export class ItineraryRepository {
               nameAddress: 0,
               location: 0,
               description: 0,
-              imageUrls: 0,
               locationCategory: 0,
               pricePerPerson: 0,
               weekday: 0,
