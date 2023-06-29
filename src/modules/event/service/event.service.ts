@@ -138,7 +138,7 @@ export class EventService {
       ];
     }
 
-    return await this.eventRepository.filterEvent(queryObject, next_cursor);
+    return await this.eventRepository.filterEvent(filterType, queryObject, next_cursor);
   }
 
   public async viewDetailEvent(
