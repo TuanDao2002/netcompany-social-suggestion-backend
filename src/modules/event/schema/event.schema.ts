@@ -85,3 +85,4 @@ EventSchema.index({ guests: 1 });
 EventSchema.index({ userId: 1 });
 EventSchema.index({ createdAt: 1 });
 EventSchema.index({ expiredAt: 1 });
+EventSchema.index({ startDateTime: 1 });

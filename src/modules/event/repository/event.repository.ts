@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import { UserDocument } from '../../user/schema/users.schema';
 import { CommonConstant } from '../../../common/constant';
+import { EventFilterType } from '../../../common/event-filter-type.enum';
 
 @Injectable()
 export class EventRepository {
@@ -20,21 +21,37 @@ export class EventRepository {
   }
 
   public async filterEvent(
+    filterType: EventFilterType,
     queryObject: any,
     next_cursor: string,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
-    let sortingQuery: any = { createdAt: -1, _id: -1 };
+    let sortingQuery: any = {
+      startDateTime: filterType === EventFilterType.PAST ? -1 : 1,
+      createdAt: -1,
+      _id: -1,
+    };
     if (next_cursor) {
       const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
         .toString('ascii')
         .split('_');
 
-      const [createdAt, _id] = decodedFromNextCursor;
-      queryObject.createdAt = { $lte: new Date(createdAt) };
-      queryObject._id = { $lt: new mongoose.Types.ObjectId(_id) };
+      const [startDateTime, createdAt, _id] = decodedFromNextCursor;
+      queryObject.$or = [
+        {
+          startDateTime:
+            filterType === EventFilterType.PAST
+              ? { $lt: new Date(startDateTime) }
+              : { $gt: new Date(startDateTime) },
+        },
+        {
+          startDateTime: new Date(startDateTime),
+          createdAt: { $lte: new Date(createdAt) },
+          _id: { $lt: new mongoose.Types.ObjectId(_id) },
+        },
+      ];
     }
 
     let filterPipelineStage: any[] = [
@@ -107,7 +124,11 @@ export class EventRepository {
     if (count > results.length) {
       const lastResult = results[results.length - 1];
       next_cursor = Buffer.from(
-        lastResult.createdAt.toISOString() + '_' + lastResult._id,
+        lastResult.startDateTime.toISOString() +
+          '_' +
+          lastResult.createdAt.toISOString() +
+          '_' +
+          lastResult._id,
       ).toString('base64');
     }
 
