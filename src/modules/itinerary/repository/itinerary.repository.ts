@@ -41,20 +41,72 @@ export class ItineraryRepository {
       queryObject._id = { $lt: new mongoose.Types.ObjectId(_id) };
     }
 
+    // put sort and limit after group to avoid unorder results
     let filterPipelineStage: any[] = [
       {
-        $sort: sortingQuery,
+        $match: queryObject,
       },
       {
-        $match: queryObject,
+        $lookup: {
+          from: 'itinerarylocations',
+          localField: 'savedLocations',
+          foreignField: '_id',
+          as: 'savedLocations',
+        },
+      },
+      {
+        $lookup: {
+          from: 'locations',
+          localField: 'savedLocations.locationId',
+          foreignField: '_id',
+          as: 'savedLocations.location',
+        },
+      },
+      {
+        $unwind: {
+          path: '$savedLocations.location',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $group: {
+          // do this to populate locationId inside each itineraryLocationId
+          _id: '$_id',
+          name: { $first: '$name' },
+          createdAt: { $first: '$createdAt' },
+          savedLocations: { $push: '$savedLocations' },
+        },
+      },
+      {
+        $sort: sortingQuery,
       },
       {
         $limit: CommonConstant.ITINERARY_PAGINATION_LIMIT,
       },
       {
+        $addFields: {
+          hasDeletedLocation: {
+            $cond: {
+              if: { $gt: [{ $size: '$savedLocations' }, 0] },
+              then: {
+                $anyElementTrue: {
+                  $map: {
+                    input: '$savedLocations',
+                    as: 'savedLocation',
+                    in: {
+                      $eq: ['$$savedLocation.location.isDeleted', true],
+                    },
+                  },
+                },
+              },
+              else: false,
+            },
+          },
+        },
+      },
+      {
         $project: {
           userId: 0,
-          savedLocations: 0,
         },
       },
     ];
@@ -149,7 +201,10 @@ export class ItineraryRepository {
         $limit: 1,
       },
       {
-        $unwind: '$savedLocations',
+        $unwind: {
+          path: '$savedLocations',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
@@ -159,7 +214,12 @@ export class ItineraryRepository {
           as: 'savedLocations',
         },
       },
-      { $unwind: '$savedLocations' },
+      {
+        $unwind: {
+          path: '$savedLocations',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $lookup: {
           from: 'locations',
@@ -168,7 +228,12 @@ export class ItineraryRepository {
           as: 'savedLocations.location',
         },
       },
-      { $unwind: '$savedLocations.location' },
+      {
+        $unwind: {
+          path: '$savedLocations.location',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $group: {
           // do this to populate locationId inside each itineraryLocationId

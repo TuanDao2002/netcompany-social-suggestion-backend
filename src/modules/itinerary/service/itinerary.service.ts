@@ -38,9 +38,23 @@ export class ItineraryService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    return await this.itineraryRepository.getItineraryList(next_cursor, {
-      userId: user._id,
+    let response = await this.itineraryRepository.getItineraryList(
+      next_cursor,
+      {
+        userId: user._id,
+      },
+    );
+
+    response.results.map((result) => {
+      if (Object.keys(result.savedLocations[0]).length === 0) {
+        result.numOfLocations = 0;
+      } else {
+        result.numOfLocations = result.savedLocations.length;
+      }
+      delete result.savedLocations;
     });
+
+    return response;
   }
 
   public async updateItinerary(
@@ -108,7 +122,7 @@ export class ItineraryService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    const findItinerary =
+    let findItinerary =
       await this.itineraryRepository.getSavedLocationsInItinerary(itineraryId);
 
     if (findItinerary.length === 0) {
@@ -119,6 +133,15 @@ export class ItineraryService {
       throw new UnauthorizedException(
         'Now allowed to view saved locations in this itinerary',
       );
+    }
+
+    /* 
+    fix this case:  "savedLocations": [
+      {}
+    ]
+    */
+    if (Object.keys(findItinerary[0].savedLocations[0]).length === 0) {
+      findItinerary[0].savedLocations = [];
     }
 
     return findItinerary[0];
