@@ -48,8 +48,6 @@ export class ItineraryService {
     response.results.map((result) => {
       if (Object.keys(result.savedLocations[0]).length === 0) {
         result.numOfLocations = 0;
-      } else {
-        result.numOfLocations = result.savedLocations.length;
       }
       delete result.savedLocations;
     });

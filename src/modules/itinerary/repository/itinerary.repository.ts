@@ -85,6 +85,7 @@ export class ItineraryRepository {
       },
       {
         $addFields: {
+          numOfLocations: { $size: '$savedLocations' },
           hasDeletedLocation: {
             $cond: {
               if: { $gt: [{ $size: '$savedLocations' }, 0] },
