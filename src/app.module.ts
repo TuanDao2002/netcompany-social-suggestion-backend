@@ -6,6 +6,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './database/database.module';
+import { ItineraryModule } from "./modules/itinerary/itinerary.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { DatabaseModule } from './database/database.module';
     AuthModule,
     LocationModule,
     EventModule,
+    ItineraryModule
   ],
   controllers: [],
   providers: [],
