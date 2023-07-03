@@ -16,7 +16,7 @@ export class LikeCommentService {
     private readonly commentRepository: CommentRepository,
   ) {}
 
-  public async likeLocation(
+  public async likeComment(
     commentId: string,
     user: UserDocument,
   ): Promise<LikeComment> {
@@ -40,7 +40,7 @@ export class LikeCommentService {
     return await this.likeCommentRepository.create(user, commentId);
   }
 
-  public async unlikeLocation(
+  public async unlikeComment(
     commentId: string,
     user: UserDocument,
   ): Promise<void> {

@@ -82,7 +82,7 @@ export class CommentController {
     @Param('id') commentId: string,
     @CurrentUser() user: UserDocument,
   ): Promise<LikeComment> {
-    return await this.likeCommentService.likeLocation(commentId, user);
+    return await this.likeCommentService.likeComment(commentId, user);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -92,7 +92,7 @@ export class CommentController {
     @CurrentUser() user: UserDocument,
     @Res() res: Response,
   ): Promise<void> {
-    await this.likeCommentService.unlikeLocation(commentId, user);
+    await this.likeCommentService.unlikeComment(commentId, user);
     res.json({ msg: 'You unliked this comment' });
   }
 }
