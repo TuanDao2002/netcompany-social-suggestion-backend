@@ -87,7 +87,7 @@ export class CommentController {
 
   @HttpCode(HttpStatus.OK)
   @Delete('like/:id')
-  async unlikeLocation(
+  async unlikeComment(
     @Param('id') commentId: string,
     @CurrentUser() user: UserDocument,
     @Res() res: Response,
