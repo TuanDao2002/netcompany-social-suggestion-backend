@@ -20,11 +20,16 @@ import { UserDocument } from '../../user/schema/users.schema';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
 import { Response } from 'express';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
+import { LikeComment } from '../schema/like-comment.schema';
+import { LikeCommentService } from '../service/like-comment.service';
 
 @Controller('comment')
 @UseGuards(JwtGuard)
 export class CommentController {
-  constructor(private readonly commentService: CommentService) {}
+  constructor(
+    private readonly commentService: CommentService,
+    private readonly likeCommentService: LikeCommentService,
+  ) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('')
@@ -69,5 +74,25 @@ export class CommentController {
       user,
       next_cursor,
     );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('like/:id')
+  async likeComment(
+    @Param('id') commentId: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<LikeComment> {
+    return await this.likeCommentService.likeLocation(commentId, user);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete('like/:id')
+  async unlikeLocation(
+    @Param('id') commentId: string,
+    @CurrentUser() user: UserDocument,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.likeCommentService.unlikeLocation(commentId, user);
+    res.json({ msg: 'You unliked this comment' });
   }
 }

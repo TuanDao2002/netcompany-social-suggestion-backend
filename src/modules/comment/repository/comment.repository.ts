@@ -42,13 +42,14 @@ export class CommentRepository {
     await this.commentModel.deleteOne({ _id: commentId });
   }
 
-  public async findCommentById(commentId: string): Promise<CommentDocument> {
+  public async findOneById(commentId: string): Promise<CommentDocument> {
     return await this.commentModel.findById(commentId);
   }
 
   public async getCommentsOfLocation(
     queryObject: any,
     next_cursor: string,
+    user: UserDocument,
   ): Promise<{
     results: any[];
     next_cursor: string;
@@ -93,11 +94,41 @@ export class CommentRepository {
         },
       },
       {
+        $lookup: {
+          from: 'likecomments',
+          let: { commentId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  // use this operator to compare 2 fields in the same joined collections
+                  $and: [
+                    { $eq: ['$commentId', '$$commentId'] },
+                    {
+                      $eq: ['$userId', user._id],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'likes',
+        },
+      },
+      {
+        $addFields: {
+          likedByUser: {
+            $cond: [{ $gt: [{ $size: '$likes' }, 0] }, true, false],
+          },
+        },
+      },
+      {
         $limit: CommonConstant.COMMENT_PAGINATION_LIMIT,
       },
       {
         $project: {
           locationId: 0,
+          likes: 0,
           user: {
             isVerified: 0,
             locationCategories: 0,

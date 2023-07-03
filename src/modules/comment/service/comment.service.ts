@@ -46,9 +46,7 @@ export class CommentService {
     }
 
     const { commentId } = updateCommentData;
-    const existingComment = await this.commentRepository.findCommentById(
-      commentId,
-    );
+    const existingComment = await this.commentRepository.findOneById(commentId);
 
     if (!existingComment) {
       throw new NotFoundException('This comment does not exist');
@@ -70,9 +68,7 @@ export class CommentService {
       throw new UnauthorizedException('You have not signed in yet');
     }
 
-    const existingComment = await this.commentRepository.findCommentById(
-      commentId,
-    );
+    const existingComment = await this.commentRepository.findOneById(commentId);
     if (!existingComment) {
       throw new NotFoundException('This comment does not exist');
     }
@@ -107,6 +103,7 @@ export class CommentService {
     return await this.commentRepository.getCommentsOfLocation(
       queryObject,
       next_cursor,
+      user,
     );
   }
 
