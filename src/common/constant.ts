@@ -21,4 +21,5 @@ export class CommonConstant {
   public static readonly ITINERARY_PAGINATION_LIMIT = 5;
   public static readonly ITINERARY_LOCATIONS_SIZE_LIMIT = 100;
   public static readonly ITINERARY_LOCATIONS_NOTE_LIMIT = 500;
+  public static readonly COMMENT_PAGINATION_LIMIT = 5;
 }

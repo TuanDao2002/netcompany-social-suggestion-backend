@@ -8,14 +8,14 @@ export type CommentDocument = HydratedDocument<Comment>;
 @Schema({ timestamps: true })
 export class Comment {
   @Prop({
-    type: [mongoose.Schema.Types.ObjectId],
+    type: mongoose.Schema.Types.ObjectId,
     ref: Location.name,
     required: true,
   })
   locationId: string;
 
   @Prop({
-    type: [mongoose.Schema.Types.ObjectId],
+    type: mongoose.Schema.Types.ObjectId,
     ref: User.name,
     required: true,
   })
@@ -26,6 +26,12 @@ export class Comment {
     trim: true,
   })
   content: string;
+
+  @Prop({
+    required: true,
+    default: 0,
+  })
+  heartCount: number;
 
   @Prop({
     required: true,
