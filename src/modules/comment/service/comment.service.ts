@@ -11,11 +11,13 @@ import { UpdateCommentDto } from '../dto/update-comment.dto';
 import { CommentRepository } from '../repository/comment.repository';
 import { CommentDocument } from '../schema/comment.schema';
 import mongoose from 'mongoose';
+import { LikeCommentRepository } from '../repository/like-comment.repository';
 
 @Injectable()
 export class CommentService {
   constructor(
     private readonly commentRepository: CommentRepository,
+    private readonly likeCommentRepository: LikeCommentRepository,
     private readonly locationRepository: LocationRepository,
   ) {}
 
@@ -78,6 +80,8 @@ export class CommentService {
 
     await this.commentRepository.deleteComment(commentId);
     res.json({ msg: 'The comment is deleted' });
+
+    await this.likeCommentRepository.removeLikesComment(commentId);
   }
 
   public async getAllCommentsOfLocation(
