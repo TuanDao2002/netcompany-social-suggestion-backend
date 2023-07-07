@@ -16,6 +16,9 @@ import { UserRepository } from '../user/repository/user.repository';
 import { ReplyService } from './service/reply.service';
 import { ReplyRepository } from './repository/reply.repository';
 import { ReplyController } from './controller/reply.controller';
+import { LikeReply, LikeReplySchema } from './schema/like-reply.schema';
+import { LikeReplyService } from './service/like-reply.service';
+import { LikeReplyRepository } from './repository/like-reply.repository';
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { ReplyController } from './controller/reply.controller';
       { name: Comment.name, schema: CommentSchema },
       { name: Reply.name, schema: ReplySchema },
       { name: LikeComment.name, schema: LikeCommentSchema },
+      { name: LikeReply.name, schema: LikeReplySchema },
       { name: Location.name, schema: LocationSchema },
       { name: User.name, schema: UserSchema },
     ]),
@@ -36,6 +40,8 @@ import { ReplyController } from './controller/reply.controller';
     ReplyRepository,
     LikeCommentService,
     LikeCommentRepository,
+    LikeReplyService,
+    LikeReplyRepository,
     LocationRepository,
     UserRepository,
   ],

@@ -5,22 +5,33 @@ import mongoose, { Model } from 'mongoose';
 import { CreateReplyDto } from '../dto/create-reply.dto';
 import { UserDocument } from '../../user/schema/users.schema';
 import { CommonConstant } from '../../../common/constant';
+import { LikeReply, LikeReplyDocument } from '../schema/like-reply.schema';
+import { Comment, CommentDocument } from '../schema/comment.schema';
 
 @Injectable()
 export class ReplyRepository {
   constructor(
     @InjectModel(Reply.name)
     private readonly replyModel: Model<ReplyDocument>,
+    @InjectModel(Comment.name)
+    private readonly commentModel: Model<CommentDocument>,
+    @InjectModel(LikeReply.name)
+    private readonly likeReplyModel: Model<LikeReplyDocument>,
   ) {}
 
   public async createReply(
     createReplyDto: CreateReplyDto,
     user: UserDocument,
   ): Promise<ReplyDocument> {
-    return await this.replyModel.create({
+    const createdReply = new this.replyModel({
       ...createReplyDto,
       userId: user._id,
     });
+    await this.commentModel.updateOne(
+      { _id: createReplyDto.targetCommentId },
+      { $inc: { numOfReplies: 1 } },
+    );
+    return createdReply.save();
   }
 
   public async updateReply(updateReplyData: any): Promise<ReplyDocument> {
@@ -35,11 +46,29 @@ export class ReplyRepository {
     );
   }
 
-  public async deleteReply(replyId: string): Promise<void> {
+  public async deleteReply(
+    replyId: string,
+    targetCommentId: string,
+  ): Promise<void> {
     await this.replyModel.deleteOne({ _id: replyId });
+    await this.commentModel.updateOne(
+      { _id: targetCommentId },
+      { $inc: { numOfReplies: -1 } },
+    );
   }
 
   public async removeRepliesOfComment(commentId: string): Promise<void> {
+    let removeLikeReplyPromises = [];
+    const repliesOfComment = await this.replyModel.find({
+      targetCommentId: commentId,
+    });
+    for (const reply of repliesOfComment) {
+      removeLikeReplyPromises.push(
+        this.likeReplyModel.deleteMany({ replyId: reply._id }),
+      );
+    }
+    await Promise.all(removeLikeReplyPromises);
+
     await this.replyModel.deleteMany({ targetCommentId: commentId });
   }
 
@@ -102,42 +131,42 @@ export class ReplyRepository {
           preserveNullAndEmptyArrays: true,
         },
       },
-      // {
-      //   $lookup: {
-      //     from: 'likecomments',
-      //     let: { commentId: '$_id' },
-      //     pipeline: [
-      //       {
-      //         $match: {
-      //           $expr: {
-      //             // use this operator to compare 2 fields in the same joined collections
-      //             $and: [
-      //               { $eq: ['$commentId', '$$commentId'] },
-      //               {
-      //                 $eq: ['$userId', user._id],
-      //               },
-      //             ],
-      //           },
-      //         },
-      //       },
-      //     ],
-      //     as: 'likes',
-      //   },
-      // },
-      // {
-      //   $addFields: {
-      //     likedByUser: {
-      //       $cond: [{ $gt: [{ $size: '$likes' }, 0] }, true, false],
-      //     },
-      //   },
-      // },
+      {
+        $lookup: {
+          from: 'likereplies',
+          let: { replyId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  // use this operator to compare 2 fields in the same joined collections
+                  $and: [
+                    { $eq: ['$replyId', '$$replyId'] },
+                    {
+                      $eq: ['$userId', user._id],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'likes',
+        },
+      },
+      {
+        $addFields: {
+          likedByUser: {
+            $cond: [{ $gt: [{ $size: '$likes' }, 0] }, true, false],
+          },
+        },
+      },
       {
         $limit: CommonConstant.REPLY_PAGINATION_LIMIT,
       },
       {
         $project: {
           locationId: 0,
-          // likes: 0,
+          likes: 0,
           user: {
             isVerified: 0,
             locationCategories: 0,

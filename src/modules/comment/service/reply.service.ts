@@ -12,11 +12,13 @@ import { ReplyRepository } from '../repository/reply.repository';
 import { UpdateReplyDto } from '../dto/update-reply.dto';
 import { Response } from 'express';
 import mongoose from 'mongoose';
+import { LikeReplyRepository } from '../repository/like-reply.repository';
 
 @Injectable()
 export class ReplyService {
   constructor(
     private readonly replyRepository: ReplyRepository,
+    private readonly likeReplyRepository: LikeReplyRepository,
     private readonly commentRepository: CommentRepository,
     private readonly userRepository: UserRepository,
   ) {}
@@ -84,11 +86,13 @@ export class ReplyService {
       throw new UnauthorizedException('Not allowed to delete this reply');
     }
 
-    await this.replyRepository.deleteReply(replyId);
+    await this.replyRepository.deleteReply(replyId, existingReply.targetCommentId);
     res.json({ msg: 'The reply is deleted' });
+
+    await this.likeReplyRepository.removeLikesReply(replyId);
   }
 
-  public async getAllCommentsOfLocation(
+  public async getAllRepliesOfComment(
     commentId: string,
     user: UserDocument,
     next_cursor: string,

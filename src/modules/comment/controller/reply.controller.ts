@@ -20,11 +20,16 @@ import { UserDocument } from '../../user/schema/users.schema';
 import { ReplyDocument } from '../schema/reply.schema';
 import { UpdateReplyDto } from '../dto/update-reply.dto';
 import { Response } from 'express';
+import { LikeReply } from '../schema/like-reply.schema';
+import { LikeReplyService } from '../service/like-reply.service';
 
 @Controller('reply')
 @UseGuards(JwtGuard)
 export class ReplyController {
-  constructor(private readonly replyService: ReplyService) {}
+  constructor(
+    private readonly replyService: ReplyService,
+    private readonly likeReplyService: LikeReplyService,
+  ) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('')
@@ -56,7 +61,7 @@ export class ReplyController {
 
   @HttpCode(HttpStatus.OK)
   @Get('comment/:commentId')
-  async viewAllCommentsOfLocation(
+  async viewAllRepliesOfComment(
     @Param('commentId') commentId: string,
     @CurrentUser() user: UserDocument,
     @Query('next_cursor') next_cursor: string,
@@ -65,10 +70,30 @@ export class ReplyController {
     next_cursor: string;
     remaining: number;
   }> {
-    return await this.replyService.getAllCommentsOfLocation(
+    return await this.replyService.getAllRepliesOfComment(
       commentId,
       user,
       next_cursor,
     );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('like/:id')
+  async likeReply(
+    @Param('id') replyId: string,
+    @CurrentUser() user: UserDocument,
+  ): Promise<LikeReply> {
+    return await this.likeReplyService.likeReply(replyId, user);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete('like/:id')
+  async unlikeReply(
+    @Param('id') replyId: string,
+    @CurrentUser() user: UserDocument,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.likeReplyService.unlikeReply(replyId, user);
+    res.json({ msg: 'You unliked this reply' });
   }
 }
