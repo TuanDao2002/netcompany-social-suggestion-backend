@@ -1,3 +1,4 @@
+import { CommentModule } from './modules/comment/comment.module';
 import { EventModule } from './modules/event/event.module';
 import { LocationModule } from './modules/location/location.module';
 import { ImageModule } from './modules/cloudinary/cloudinary.module';
@@ -20,7 +21,8 @@ import { ItineraryModule } from "./modules/itinerary/itinerary.module";
     AuthModule,
     LocationModule,
     EventModule,
-    ItineraryModule
+    ItineraryModule,
+    CommentModule,
   ],
   controllers: [],
   providers: [],
