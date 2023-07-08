@@ -54,7 +54,7 @@ export class CommentRepository {
     results: any[];
     next_cursor: string;
   }> {
-    let sortingQuery = { heartCount: -1, createdAt: -1, _id: -1 };
+    let sortingQuery = { heartCount: -1, createdAt: 1, _id: 1 };
     if (next_cursor) {
       const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
         .toString('ascii')
@@ -66,8 +66,8 @@ export class CommentRepository {
         { heartCount: { $lt: parseInt(heartCount, 10) } },
         {
           heartCount: parseInt(heartCount, 10),
-          createdAt: { $lte: new Date(createdAt) },
-          _id: { $lt: new mongoose.Types.ObjectId(_id) },
+          createdAt: { $gte: new Date(createdAt) },
+          _id: { $gt: new mongoose.Types.ObjectId(_id) },
         },
       ];
     }
