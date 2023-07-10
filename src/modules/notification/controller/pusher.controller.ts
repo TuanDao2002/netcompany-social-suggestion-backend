@@ -1,20 +1,32 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { PusherService } from '../service/pusher.service';
 import { JwtGuard } from '../../auth/guard/jwt.guard';
 import { CurrentUser } from '../../auth/guard/user.decorator';
 import { UserDocument } from '../../user/schema/users.schema';
-import { UserAuthResponse } from 'pusher';
+import { ChannelAuthResponse } from 'pusher';
 
 @Controller('pusher')
 export class PusherController {
   constructor(private readonly pusherService: PusherService) {}
 
   @UseGuards(JwtGuard)
-  @Post('user-auth')
-  auth(@Body() body: any, @CurrentUser() user: UserDocument): UserAuthResponse {
+  @HttpCode(HttpStatus.OK)
+  @Post('auth')
+  auth(
+    @Body() body: any,
+    @CurrentUser() user: UserDocument,
+  ): ChannelAuthResponse {
     const socketId = body.socket_id;
+    const channelName = body.channel_name;
     const userInfo = {
-      id: String(user._id),
+      user_id: String(user._id),
       user_info: {
         _id: String(user._id),
         name: user.username,
@@ -22,6 +34,17 @@ export class PusherController {
       },
       watchlist: [],
     };
-    return this.pusherService.pusher.authenticateUser(socketId, userInfo);
+    return this.pusherService.pusher.authorizeChannel(
+      socketId,
+      channelName,
+      userInfo,
+    );
   }
+
+  // @Post('noti')
+  // test() {
+  //   this.pusherService.sendNotification(['123'], {
+  //     message: 'this is test',
+  //   });
+  // }
 }

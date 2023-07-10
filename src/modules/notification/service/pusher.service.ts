@@ -14,4 +14,14 @@ export class PusherService {
       useTLS: true,
     });
   }
+
+  public sendNotification(targetUserIds: string[], notification: any) {
+    for (let targetUserId of targetUserIds) {
+      this.pusher.trigger(
+        `private-${targetUserId}`,
+        'notification',
+        notification,
+      );
+    }
+  }
 }

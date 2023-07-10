@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { NotificationService } from '../service/notification.service';
 @UseGuards(JwtGuard)
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
+
   @HttpCode(HttpStatus.OK)
   @Get('me')
   async viewAllNotifications(
@@ -26,4 +28,10 @@ export class NotificationController {
   }> {
     return await this.notificationService.getNotifications(user, next_cursor);
   }
+
+  // @HttpCode(HttpStatus.OK)
+  // @Get('test/:locationId')
+  // async getUserIdsOfRelevantEvent(@Param('locationId') locationId: string) {
+  //   return await this.notificationService.getUserIdsRelevantToEvent(locationId);
+  // }
 }

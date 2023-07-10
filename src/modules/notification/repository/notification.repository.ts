@@ -8,12 +8,17 @@ import mongoose, { Model } from 'mongoose';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { CommonConstant } from '../../../common/constant';
+import { Event, EventDocument } from '../../event/schema/event.schema';
+import { EventService } from '../../event/service/event.service';
 
 @Injectable()
 export class NotificationRepository {
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<NotificationDocument>,
+    @InjectModel(Event.name)
+    private eventModel: Model<EventDocument>,
+    private eventService: EventService,
   ) {}
 
   public async createNotification(
@@ -125,5 +130,43 @@ export class NotificationRepository {
       results,
       next_cursor,
     };
+  }
+
+  public async getUserIdsRelevantToEvent(
+    locationId: string,
+  ): Promise<string[]> {
+    let queryObject: any = {};
+    queryObject.$and = [
+      { locationId: new mongoose.Types.ObjectId(locationId) },
+      this.eventService.filterAvailableEvents(),
+    ];
+    let filterPipelineStage: any[] = [
+      {
+        $match: queryObject,
+      },
+      {
+        $addFields: {
+          relevantUserIds: {
+            $concatArrays: ['$guests', [{ $toString: '$userId' }]],
+          },
+        },
+      },
+      {
+        $unwind: '$relevantUserIds',
+      },
+      {
+        $group: {
+          _id: null, // Grouping by null will group all documents together.
+          combinedArray: {
+            $push: '$relevantUserIds', // Push each item to the new array.
+          },
+        },
+      },
+    ];
+
+    const totalMatchResults = await this.eventModel.aggregate(
+      filterPipelineStage,
+    );
+    return totalMatchResults[0]?.combinedArray || [];
   }
 }
