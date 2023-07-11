@@ -31,7 +31,7 @@ export class NotificationController {
 
   // @HttpCode(HttpStatus.OK)
   // @Get('test/:locationId')
-  // async getUserIdsOfRelevantEvent(@Param('locationId') locationId: string) {
-  //   return await this.notificationService.getUserIdsRelevantToEvent(locationId);
+  // async getUserIdsOfRelevantLocation(@Param('locationId') locationId: string) {
+  //   return await this.notificationService.notifyAboutLocationChanges(locationId, '64a4f615d58b9c764cef15ec');
   // }
 }

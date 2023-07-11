@@ -10,6 +10,10 @@ import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { CommonConstant } from '../../../common/constant';
 import { Event, EventDocument } from '../../event/schema/event.schema';
 import { EventService } from '../../event/service/event.service';
+import {
+  ItineraryLocation,
+  ItineraryLocationDocument,
+} from '../../itinerary/schema/itinerary-location.schema';
 
 @Injectable()
 export class NotificationRepository {
@@ -19,12 +23,14 @@ export class NotificationRepository {
     @InjectModel(Event.name)
     private eventModel: Model<EventDocument>,
     private eventService: EventService,
+    @InjectModel(ItineraryLocation.name)
+    private itineraryLocationModel: Model<ItineraryLocationDocument>,
   ) {}
 
-  public async createNotification(
-    createNotificationDto: CreateNotificationDto,
-  ): Promise<NotificationDocument> {
-    return await this.notificationModel.create(createNotificationDto);
+  public async createMultipleNotification(
+    createNotificationDtos: CreateNotificationDto[],
+  ): Promise<NotificationDocument[]> {
+    return await this.notificationModel.insertMany(createNotificationDtos);
   }
 
   public async updateNotification(
@@ -132,7 +138,7 @@ export class NotificationRepository {
     };
   }
 
-  public async getUserIdsRelevantToEvent(
+  public async getUserIdsOfAffectedEvents(
     locationId: string,
   ): Promise<string[]> {
     let queryObject: any = {};
@@ -140,6 +146,7 @@ export class NotificationRepository {
       { locationId: new mongoose.Types.ObjectId(locationId) },
       this.eventService.filterAvailableEvents(),
     ];
+
     let filterPipelineStage: any[] = [
       {
         $match: queryObject,
@@ -168,5 +175,43 @@ export class NotificationRepository {
       filterPipelineStage,
     );
     return totalMatchResults[0]?.combinedArray || [];
+  }
+
+  public async getUserIdsOfAffectedItineraries(locationId: string) {
+    let queryObject: any = {};
+    queryObject.$and = [
+      { locationId: new mongoose.Types.ObjectId(locationId) },
+    ];
+
+    let filterPipelineStage: any[] = [
+      {
+        $match: queryObject,
+      },
+      {
+        $lookup: {
+          from: 'itineraries',
+          localField: 'itineraryId',
+          foreignField: '_id',
+          as: 'itineraryDetail',
+        },
+      },
+      {
+        $unwind: '$itineraryDetail',
+      },
+      {
+        $group: {
+          _id: null, // Grouping by null will group all documents together.
+          userIdList: {
+            $push: '$itineraryDetail.userId', // Push each item to the new array.
+          },
+        },
+      },
+    ];
+
+    const results: any[] = await this.itineraryLocationModel.aggregate(
+      filterPipelineStage,
+    );
+
+    return results[0]?.userIdList || [];
   }
 }

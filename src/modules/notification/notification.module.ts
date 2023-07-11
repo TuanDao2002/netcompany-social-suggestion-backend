@@ -10,6 +10,10 @@ import { PusherService } from './service/pusher.service';
 import { Event, EventSchema } from '../event/schema/event.schema';
 import { EventRepository } from '../event/repository/event.repository';
 import { EventService } from '../event/service/event.service';
+import {
+  ItineraryLocation,
+  ItineraryLocationSchema,
+} from '../itinerary/schema/itinerary-location.schema';
 
 @Module({
   imports: [
@@ -17,6 +21,7 @@ import { EventService } from '../event/service/event.service';
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema },
       { name: Event.name, schema: EventSchema },
+      { name: ItineraryLocation.name, schema: ItineraryLocationSchema },
     ]),
   ],
   controllers: [NotificationController, PusherController],

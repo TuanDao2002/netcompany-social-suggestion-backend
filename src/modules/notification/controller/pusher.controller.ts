@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { PusherService } from '../service/pusher.service';
@@ -25,6 +26,9 @@ export class PusherController {
   ): ChannelAuthResponse {
     const socketId = body.socket_id;
     const channelName = body.channel_name;
+    if (channelName !== `private-${String(user._id)}`) {
+      throw new UnauthorizedException();
+    }
     const userInfo = {
       user_id: String(user._id),
       user_info: {
