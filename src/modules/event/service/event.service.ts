@@ -14,10 +14,14 @@ import { EventDocument } from '../schema/event.schema';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { Response } from 'express';
 import { Utils } from '../../../common/utils';
+import { NotificationService } from '../../notification/service/notification.service';
 
 @Injectable()
 export class EventService {
-  constructor(private readonly eventRepository: EventRepository) {}
+  constructor(
+    private readonly eventRepository: EventRepository,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   public async createEvent(
     eventData: CreateEventDto,
@@ -160,7 +164,8 @@ export class EventService {
   public async updateEvent(
     updateEventData: UpdateEventDto,
     user: UserDocument,
-  ): Promise<EventDocument> {
+    res: Response,
+  ): Promise<void> {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
     }
@@ -212,11 +217,15 @@ export class EventService {
     delete updateEventData.startDate;
     delete updateEventData.startTime;
 
-    return await this.eventRepository.updateEvent({
-      ...updateEventData,
-      startDateTime: luxonStartDateTime.toUTC().toBSON(),
-      expiredAt: luxonExpiredDateTime.toUTC().toBSON(),
-    });
+    res.json(
+      await this.eventRepository.updateEvent({
+        ...updateEventData,
+        startDateTime: luxonStartDateTime.toUTC().toBSON(),
+        expiredAt: luxonExpiredDateTime.toUTC().toBSON(),
+      }),
+    );
+
+    await this.notificationService.notifyAboutEventChanges(eventId, user);
   }
 
   public async deleteEvent(

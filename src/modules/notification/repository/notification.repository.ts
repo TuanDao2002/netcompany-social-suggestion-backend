@@ -9,7 +9,6 @@ import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { CommonConstant } from '../../../common/constant';
 import { Event, EventDocument } from '../../event/schema/event.schema';
-import { EventService } from '../../event/service/event.service';
 import {
   ItineraryLocation,
   ItineraryLocationDocument,
@@ -22,7 +21,6 @@ export class NotificationRepository {
     private notificationModel: Model<NotificationDocument>,
     @InjectModel(Event.name)
     private eventModel: Model<EventDocument>,
-    private eventService: EventService,
     @InjectModel(ItineraryLocation.name)
     private itineraryLocationModel: Model<ItineraryLocationDocument>,
   ) {}
@@ -144,7 +142,7 @@ export class NotificationRepository {
     let queryObject: any = {};
     queryObject.$and = [
       { locationId: new mongoose.Types.ObjectId(locationId) },
-      this.eventService.filterAvailableEvents(),
+      { $expr: { $gt: ['$expiredAt', new Date()] } },
     ];
 
     let filterPipelineStage: any[] = [
@@ -177,7 +175,9 @@ export class NotificationRepository {
     return totalMatchResults[0]?.combinedArray || [];
   }
 
-  public async getUserIdsOfAffectedItineraries(locationId: string) {
+  public async getUserIdsOfAffectedItineraries(
+    locationId: string,
+  ): Promise<string[]> {
     let queryObject: any = {};
     queryObject.$and = [
       { locationId: new mongoose.Types.ObjectId(locationId) },

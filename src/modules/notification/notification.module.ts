@@ -30,7 +30,6 @@ import {
     NotificationRepository,
     PusherService,
     EventRepository,
-    EventService,
   ],
 })
 export class NotificationModule {}
