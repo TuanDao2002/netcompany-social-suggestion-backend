@@ -31,6 +31,12 @@ export class NotificationRepository {
     return await this.notificationModel.insertMany(createNotificationDtos);
   }
 
+  public async findNotificationById(
+    notificationId: string,
+  ): Promise<NotificationDocument> {
+    return await this.notificationModel.findById(notificationId);
+  }
+
   public async updateNotification(
     updateNotificationDto: UpdateNotificationDto,
   ): Promise<NotificationDocument> {
@@ -213,5 +219,12 @@ export class NotificationRepository {
     );
 
     return results[0]?.userIdList || [];
+  }
+
+  public async countUnseenNotifications(targetUserId: string): Promise<number> {
+    return await this.notificationModel.countDocuments({
+      targetUserId,
+      isSeen: false,
+    });
   }
 }

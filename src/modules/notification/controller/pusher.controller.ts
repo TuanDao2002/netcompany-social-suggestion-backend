@@ -44,11 +44,4 @@ export class PusherController {
       userInfo,
     );
   }
-
-  // @Post('noti')
-  // test() {
-  //   this.pusherService.sendNotification(['123'], {
-  //     message: 'this is test',
-  //   });
-  // }
 }

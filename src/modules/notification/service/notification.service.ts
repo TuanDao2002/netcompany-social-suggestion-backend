@@ -11,6 +11,7 @@ import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { ModelType } from '../../../common/model-type.enum';
 import { LocationDocument } from '../../location/schema/locations.schema';
 import { EventRepository } from '../../event/repository/event.repository';
+import { NotificationDocument } from '../schema/notification.schema';
 
 @Injectable()
 export class NotificationService {
@@ -131,5 +132,35 @@ export class NotificationService {
         modelType: ModelType.EVENT,
       },
     });
+  }
+
+  public async seenNotification(
+    notificationId: string,
+    user: UserDocument,
+  ): Promise<NotificationDocument> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
+    const existingNotification =
+      await this.notificationRepository.findNotificationById(notificationId);
+    if (!existingNotification) {
+      throw new NotFoundException('This notification does not exist');
+    }
+
+    return await this.notificationRepository.updateNotification({
+      notificationId,
+      isSeen: true,
+    });
+  }
+
+  public async countUnseenNotifications(user: UserDocument): Promise<number> {
+    if (!user) {
+      throw new UnauthorizedException('You have not signed in yet');
+    }
+
+    return await this.notificationRepository.countUnseenNotifications(
+      String(user._id),
+    );
   }
 }

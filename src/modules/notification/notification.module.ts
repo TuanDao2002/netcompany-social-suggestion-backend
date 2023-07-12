@@ -9,7 +9,6 @@ import { Notification, NotificationSchema } from './schema/notification.schema';
 import { PusherService } from './service/pusher.service';
 import { Event, EventSchema } from '../event/schema/event.schema';
 import { EventRepository } from '../event/repository/event.repository';
-import { EventService } from '../event/service/event.service';
 import {
   ItineraryLocation,
   ItineraryLocationSchema,
