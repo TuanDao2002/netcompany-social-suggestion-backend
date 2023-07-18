@@ -56,24 +56,26 @@ export class NotificationService {
     let formattedUserIdsOfAffectedEvents = Array.from(
       new Set([...userIdsOfAffectedEvents.map((id: any) => id.toString())]),
     ) as [string];
-    formattedUserIdsOfAffectedEvents = formattedUserIdsOfAffectedEvents.filter(
-      (userId) => userId !== String(modifier._id),
-    ) as [string];
+    // comment for dev
+    // formattedUserIdsOfAffectedEvents = formattedUserIdsOfAffectedEvents.filter(
+    //   (userId) => userId !== String(modifier._id),
+    // ) as [string];
 
     let formattedUserIdsOfAffectedItineraries = Array.from(
       new Set([
         ...userIdsOfAffectedItineraries.map((id: any) => id.toString()),
       ]),
     ) as [string];
-    formattedUserIdsOfAffectedItineraries =
-      formattedUserIdsOfAffectedItineraries.filter(
-        (userId) => userId !== String(modifier._id),
-      ) as [string];
+    // comment for dev
+    // formattedUserIdsOfAffectedItineraries =
+    //   formattedUserIdsOfAffectedItineraries.filter(
+    //     (userId) => userId !== String(modifier._id),
+    //   ) as [string];
 
     let newNotifications: CreateNotificationDto[] = [];
     formattedUserIdsOfAffectedEvents.forEach((userId) => {
       newNotifications.push({
-        content: `'${modifier.username}' has updated the location: '${location.name} that hosts an event you will join'`,
+        content: `'${modifier.username}' has updated the location that hosts an event you will join: '${location.name}'`,
         targetUserId: userId,
         modifierId: String(modifier._id),
         redirectTo: {
@@ -85,7 +87,7 @@ export class NotificationService {
 
     formattedUserIdsOfAffectedItineraries.forEach((userId) => {
       newNotifications.push({
-        content: `'${modifier.username}' has updated the location: '${location.name} that was saved in your itinerary list'`,
+        content: `'${modifier.username}' has updated the location that was saved in your itinerary list: '${location.name}'`,
         targetUserId: userId,
         modifierId: String(modifier._id),
         redirectTo: {
