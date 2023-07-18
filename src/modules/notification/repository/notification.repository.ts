@@ -65,8 +65,8 @@ export class NotificationRepository {
         .split('_');
 
       const [createdAt, _id] = decodedFromNextCursor;
-      queryObject.createdAt = { $gte: new Date(createdAt) };
-      queryObject._id = { $gt: new mongoose.Types.ObjectId(_id) };
+      queryObject.createdAt = { $lte: new Date(createdAt) };
+      queryObject._id = { $lt: new mongoose.Types.ObjectId(_id) };
     }
 
     let filterPipelineStage: any[] = [

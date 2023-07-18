@@ -1,5 +1,3 @@
-import { PusherService } from './modules/notification/service/pusher.service';
-import { PusherController } from './modules/notification/controller/pusher.controller';
 import { NotificationModule } from './modules/notification/notification.module';
 import { CommentModule } from './modules/comment/comment.module';
 import { EventModule } from './modules/event/event.module';

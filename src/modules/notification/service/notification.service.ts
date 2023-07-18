@@ -53,20 +53,39 @@ export class NotificationService {
         ),
       ]);
 
-    let userIds = Array.from(
+    let formattedUserIdsOfAffectedEvents = Array.from(
+      new Set([...userIdsOfAffectedEvents.map((id: any) => id.toString())]),
+    ) as [string];
+    formattedUserIdsOfAffectedEvents = formattedUserIdsOfAffectedEvents.filter(
+      (userId) => userId !== String(modifier._id),
+    ) as [string];
+
+    let formattedUserIdsOfAffectedItineraries = Array.from(
       new Set([
-        ...userIdsOfAffectedEvents.map((id: any) => id.toString()),
         ...userIdsOfAffectedItineraries.map((id: any) => id.toString()),
       ]),
     ) as [string];
-    userIds = userIds.filter((userId) => userId !== String(modifier._id)) as [
-      string,
-    ];
+    formattedUserIdsOfAffectedItineraries =
+      formattedUserIdsOfAffectedItineraries.filter(
+        (userId) => userId !== String(modifier._id),
+      ) as [string];
 
-    const newNotifications: CreateNotificationDto[] = [];
-    userIds.forEach((userId) => {
+    let newNotifications: CreateNotificationDto[] = [];
+    formattedUserIdsOfAffectedEvents.forEach((userId) => {
       newNotifications.push({
-        content: `"${modifier.username}" has updated location: "${location.name}"`,
+        content: `'${modifier.username}' has updated the location: '${location.name} that hosts an event you will join'`,
+        targetUserId: userId,
+        modifierId: String(modifier._id),
+        redirectTo: {
+          targetId: String(location._id),
+          modelType: ModelType.LOCATION,
+        },
+      });
+    });
+
+    formattedUserIdsOfAffectedItineraries.forEach((userId) => {
+      newNotifications.push({
+        content: `'${modifier.username}' has updated the location: '${location.name} that was saved in your itinerary list'`,
         targetUserId: userId,
         modifierId: String(modifier._id),
         redirectTo: {
@@ -80,8 +99,18 @@ export class NotificationService {
       newNotifications,
     );
 
-    this.pusherService.sendNotification(userIds, {
-      content: `"${modifier.username}" has updated location: "${location.name}"`,
+    this.pusherService.sendNotification(formattedUserIdsOfAffectedEvents, {
+      content: `'${modifier.username}' has updated the location: '${location.name} that hosts an event you will join'`,
+      modifierId: String(modifier._id),
+      modifierImageUrl: modifier.imageUrl,
+      redirectTo: {
+        targetId: String(location._id),
+        modelType: ModelType.LOCATION,
+      },
+    });
+
+    this.pusherService.sendNotification(formattedUserIdsOfAffectedItineraries, {
+      content: `'${modifier.username}' has updated the location: '${location.name} that was saved in your itinerary list'`,
       modifierId: String(modifier._id),
       modifierImageUrl: modifier.imageUrl,
       redirectTo: {
@@ -109,7 +138,7 @@ export class NotificationService {
     const newNotifications: CreateNotificationDto[] = [];
     userIds.forEach((userId) => {
       newNotifications.push({
-        content: `"${modifier.username}" has updated event: "${name}"`,
+        content: `'${modifier.username}' has updated event: '${name}'`,
         targetUserId: userId,
         modifierId: String(modifier._id),
         redirectTo: {
@@ -124,7 +153,7 @@ export class NotificationService {
     );
 
     this.pusherService.sendNotification(userIds, {
-      content: `"${modifier.username}" has updated event: "${name}"`,
+      content: `'${modifier.username}' has updated event: '${name}'`,
       modifierId: String(modifier._id),
       modifierImageUrl: modifier.imageUrl,
       redirectTo: {
