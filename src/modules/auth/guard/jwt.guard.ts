@@ -20,16 +20,16 @@ export class JwtGuard extends AuthGuard('jwt') implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
 
-    // if user has signed in
-    if (isAuthorized) {
-      const { user } = req;
-      // create a new cookie and attach to response
-      const accessToken = await this.authService.signToken(
-        user._id.toHexString(),
-        user.email,
-      );
-      res.cookie('access_token', accessToken, CommonConstant.COOKIE_OPTIONS);
-    }
+    // // if user has signed in
+    // if (isAuthorized) {
+    //   const { user } = req;
+    //   // create a new cookie and attach to response
+    //   const accessToken = await this.authService.signToken(
+    //     user._id.toHexString(),
+    //     user.email,
+    //   );
+    //   res.cookie('access_token', accessToken, CommonConstant.COOKIE_OPTIONS);
+    // }
 
     return isAuthorized;
   }
