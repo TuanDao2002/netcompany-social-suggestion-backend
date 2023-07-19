@@ -19,7 +19,6 @@ export class JwtGuard extends AuthGuard('jwt') implements CanActivate {
     const isAuthorized = (await super.canActivate(context)) as boolean;
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
-
     // // if user has signed in
     // if (isAuthorized) {
     //   const { user } = req;
