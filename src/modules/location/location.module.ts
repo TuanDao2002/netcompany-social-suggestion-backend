@@ -17,7 +17,6 @@ import { NotificationService } from "../notification/service/notification.servic
 import { NotificationRepository } from "../notification/repository/notification.repository";
 import { PusherService } from "../notification/service/pusher.service";
 import { Notification, NotificationSchema } from "../notification/schema/notification.schema";
-import { EventService } from "../event/service/event.service";
 import { NotificationModule } from "../notification/notification.module";
 import { EventModule } from "../event/event.module";
 import { ItineraryLocation, ItineraryLocationSchema } from "../itinerary/schema/itinerary-location.schema";
@@ -43,7 +42,6 @@ import { ItineraryLocation, ItineraryLocationSchema } from "../itinerary/schema/
     LikeLocationRepository,
     NotificationService,
     NotificationRepository,
-    EventService,
     EventRepository,
     PusherService
   ],
