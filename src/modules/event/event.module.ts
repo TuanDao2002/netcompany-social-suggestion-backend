@@ -18,6 +18,10 @@ import {
   ItineraryLocation,
   ItineraryLocationSchema,
 } from '../itinerary/schema/itinerary-location.schema';
+import {
+  NotificationSeen,
+  NotificationSeenSchema,
+} from '../notification/schema/notification-seen.schema';
 
 @Module({
   imports: [
@@ -26,6 +30,7 @@ import {
       { name: Location.name, schema: LocationSchema },
       { name: Event.name, schema: EventSchema },
       { name: Notification.name, schema: NotificationSchema },
+      { name: NotificationSeen.name, schema: NotificationSeenSchema },
       { name: ItineraryLocation.name, schema: ItineraryLocationSchema },
     ]),
   ],

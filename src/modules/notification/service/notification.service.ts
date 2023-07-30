@@ -33,10 +33,18 @@ export class NotificationService {
     }
 
     const queryObject = { targetUserId: new mongoose.Types.ObjectId(user._id) };
-    return await this.notificationRepository.getNotifications(
+    const response = await this.notificationRepository.getNotifications(
       queryObject,
       next_cursor,
     );
+
+    if (response.results.length > 0) {
+      await this.notificationRepository.updateLatestDateTimeSeenNotification(
+        String(user._id),
+      );
+    }
+
+    return response;
   }
 
   public async notifyAboutLocationChanges(
@@ -133,9 +141,9 @@ export class NotificationService {
 
     const { guests, name } = findEvent[0];
     let userIds = guests.map((guest: any) => guest._id.toString()) as [string];
-    userIds = userIds.filter((userId) => userId !== String(modifier._id)) as [
-      string,
-    ];
+    // userIds = userIds.filter((userId) => userId !== String(modifier._id)) as [
+    //   string,
+    // ];
 
     const newNotifications: CreateNotificationDto[] = [];
     userIds.forEach((userId) => {
@@ -165,25 +173,24 @@ export class NotificationService {
     });
   }
 
-  public async seenNotification(
-    notificationId: string,
-    user: UserDocument,
-  ): Promise<NotificationDocument> {
-    if (!user) {
-      throw new UnauthorizedException('You have not signed in yet');
-    }
+  // public async seenNotification(
+  //   notificationId: string,
+  //   user: UserDocument,
+  // ): Promise<NotificationDocument> {
+  //   if (!user) {
+  //     throw new UnauthorizedException('You have not signed in yet');
+  //   }
 
-    const existingNotification =
-      await this.notificationRepository.findNotificationById(notificationId);
-    if (!existingNotification) {
-      throw new NotFoundException('This notification does not exist');
-    }
+  //   const existingNotification =
+  //     await this.notificationRepository.findNotificationById(notificationId);
+  //   if (!existingNotification) {
+  //     throw new NotFoundException('This notification does not exist');
+  //   }
 
-    return await this.notificationRepository.updateNotification({
-      notificationId,
-      isSeen: true,
-    });
-  }
+  //   return await this.notificationRepository.updateNotification({
+  //     notificationId,
+  //   });
+  // }
 
   public async countUnseenNotifications(user: UserDocument): Promise<number> {
     if (!user) {

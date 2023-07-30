@@ -31,17 +31,17 @@ export class NotificationController {
     return await this.notificationService.getNotifications(user, next_cursor);
   }
 
-  @HttpCode(HttpStatus.OK)
-  @Patch('seen/:notificationId')
-  async seenNotification(
-    @Param('notificationId') notificationId: string,
-    @CurrentUser() user: UserDocument,
-  ): Promise<NotificationDocument> {
-    return await this.notificationService.seenNotification(
-      notificationId,
-      user,
-    );
-  }
+  // @HttpCode(HttpStatus.OK)
+  // @Patch('seen/:notificationId')
+  // async seenNotification(
+  //   @Param('notificationId') notificationId: string,
+  //   @CurrentUser() user: UserDocument,
+  // ): Promise<NotificationDocument> {
+  //   return await this.notificationService.seenNotification(
+  //     notificationId,
+  //     user,
+  //   );
+  // }
 
   @HttpCode(HttpStatus.OK)
   @Get('unseen/count')

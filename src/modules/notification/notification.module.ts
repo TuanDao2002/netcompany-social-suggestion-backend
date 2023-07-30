@@ -13,12 +13,17 @@ import {
   ItineraryLocation,
   ItineraryLocationSchema,
 } from '../itinerary/schema/itinerary-location.schema';
+import {
+  NotificationSeen,
+  NotificationSeenSchema,
+} from './schema/notification-seen.schema';
 
 @Module({
   imports: [
     AuthModule,
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema },
+      { name: NotificationSeen.name, schema: NotificationSeenSchema },
       { name: Event.name, schema: EventSchema },
       { name: ItineraryLocation.name, schema: ItineraryLocationSchema },
     ]),

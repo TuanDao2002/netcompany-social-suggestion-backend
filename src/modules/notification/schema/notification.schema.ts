@@ -45,9 +45,6 @@ export class Notification {
     targetId: Types.ObjectId;
     modelType: ModelType;
   };
-
-  @Prop({ default: false, required: true })
-  isSeen: boolean;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

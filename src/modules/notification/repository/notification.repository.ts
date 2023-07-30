@@ -6,19 +6,24 @@ import {
 } from '../schema/notification.schema';
 import mongoose, { Model } from 'mongoose';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
-import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { CommonConstant } from '../../../common/constant';
 import { Event, EventDocument } from '../../event/schema/event.schema';
 import {
   ItineraryLocation,
   ItineraryLocationDocument,
 } from '../../itinerary/schema/itinerary-location.schema';
+import {
+  NotificationSeen,
+  NotificationSeenDocument,
+} from '../schema/notification-seen.schema';
 
 @Injectable()
 export class NotificationRepository {
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<NotificationDocument>,
+    @InjectModel(NotificationSeen.name)
+    private notificationSeenModel: Model<NotificationSeenDocument>,
     @InjectModel(Event.name)
     private eventModel: Model<EventDocument>,
     @InjectModel(ItineraryLocation.name)
@@ -31,25 +36,25 @@ export class NotificationRepository {
     return await this.notificationModel.insertMany(createNotificationDtos);
   }
 
-  public async findNotificationById(
-    notificationId: string,
-  ): Promise<NotificationDocument> {
-    return await this.notificationModel.findById(notificationId);
-  }
+  // public async findNotificationById(
+  //   notificationId: string,
+  // ): Promise<NotificationDocument> {
+  //   return await this.notificationModel.findById(notificationId);
+  // }
 
-  public async updateNotification(
-    updateNotificationDto: UpdateNotificationDto,
-  ): Promise<NotificationDocument> {
-    return await this.notificationModel.findOneAndUpdate(
-      {
-        _id: updateNotificationDto.notificationId,
-      },
-      {
-        ...updateNotificationDto,
-      },
-      { new: true },
-    );
-  }
+  // public async updateNotification(
+  //   updateNotificationDto: UpdateNotificationDto,
+  // ): Promise<NotificationDocument> {
+  //   return await this.notificationModel.findOneAndUpdate(
+  //     {
+  //       _id: updateNotificationDto.notificationId,
+  //     },
+  //     {
+  //       ...updateNotificationDto,
+  //     },
+  //     { new: true },
+  //   );
+  // }
 
   public async getNotifications(
     queryObject: any,
@@ -222,9 +227,31 @@ export class NotificationRepository {
   }
 
   public async countUnseenNotifications(targetUserId: string): Promise<number> {
-    return await this.notificationModel.countDocuments({
-      targetUserId,
-      isSeen: false,
+    const notificationSeen = await this.notificationSeenModel.findOne({
+      userId: targetUserId,
     });
+
+    let queryObject: any = { targetUserId };
+    if (notificationSeen) {
+      queryObject.createdAt = {
+        $gt: new Date(notificationSeen.latestSeenDateTime),
+      };
+    }
+
+    return await this.notificationModel.countDocuments(queryObject);
+  }
+
+  public async updateLatestDateTimeSeenNotification(
+    userId: string,
+  ): Promise<void> {
+    const lastSeenNotification: any = await this.notificationModel
+      .findOne({ targetUserId: userId })
+      .sort({ createdAt: -1, _id: -1 });
+
+    await this.notificationSeenModel.updateOne(
+      { userId },
+      { latestSeenDateTime: lastSeenNotification.createdAt, userId },
+      { upsert: true },
+    );
   }
 }
