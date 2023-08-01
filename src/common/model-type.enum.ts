@@ -1,4 +1,4 @@
 export enum ModelType {
-  LOCATION = 'LOCATION',
+  ITINERARY = 'ITINERARY',
   EVENT = 'EVENT',
 }

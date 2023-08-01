@@ -10,7 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         ConfigModule,
       ],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get('MONGO_URI'),
+        uri: configService.get('MONGO_URI_BACKUP'),
       }),
       inject: [ConfigService],
     }),

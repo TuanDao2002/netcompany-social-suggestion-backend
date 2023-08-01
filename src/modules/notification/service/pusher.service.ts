@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Pusher from 'pusher';
+import { CreateNotificationDto } from '../dto/create-notification.dto';
+import { UserDocument } from '../../user/schema/users.schema';
 
 @Injectable()
 export class PusherService {
@@ -15,12 +17,15 @@ export class PusherService {
     });
   }
 
-  public sendNotification(targetUserIds: string[], notification: any) {
-    for (let targetUserId of targetUserIds) {
+  public sendNotifications(
+    notifications: CreateNotificationDto[],
+    modifier: UserDocument,
+  ) {
+    for (let notification of notifications) {
       this.pusher.trigger(
-        `private-${targetUserId}`,
+        `private-${notification.targetUserId}`,
         'notification',
-        notification,
+        { ...notification, modifierImageUrl: modifier.imageUrl },
       );
     }
   }

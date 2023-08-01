@@ -33,36 +33,26 @@ export class NotificationRepository {
   public async createMultipleNotification(
     createNotificationDtos: CreateNotificationDto[],
   ): Promise<NotificationDocument[]> {
-    return await this.notificationModel.insertMany(createNotificationDtos);
+    return await this.notificationModel.insertMany(createNotificationDtos, {
+      ordered: false,
+    });
   }
-
-  // public async findNotificationById(
-  //   notificationId: string,
-  // ): Promise<NotificationDocument> {
-  //   return await this.notificationModel.findById(notificationId);
-  // }
-
-  // public async updateNotification(
-  //   updateNotificationDto: UpdateNotificationDto,
-  // ): Promise<NotificationDocument> {
-  //   return await this.notificationModel.findOneAndUpdate(
-  //     {
-  //       _id: updateNotificationDto.notificationId,
-  //     },
-  //     {
-  //       ...updateNotificationDto,
-  //     },
-  //     { new: true },
-  //   );
-  // }
 
   public async getNotifications(
     queryObject: any,
     next_cursor: string,
+    userId: string,
   ): Promise<{
     results: any[];
     next_cursor: string;
   }> {
+    const lastNotificationSeen = await this.notificationSeenModel.findOne({
+      userId,
+    });
+    const latestSeenDateTime = lastNotificationSeen
+      ? new Date(lastNotificationSeen.latestSeenDateTime)
+      : new Date(0);
+
     let sortingQuery = { createdAt: -1, _id: -1 };
     if (next_cursor) {
       const decodedFromNextCursor = Buffer.from(next_cursor, 'base64')
@@ -99,6 +89,13 @@ export class NotificationRepository {
         $limit: CommonConstant.NOTIFICATION_PAGINATION_LIMIT,
       },
       {
+        $addFields: {
+          isSeen: {
+            $cond: [{ $lte: ['$createdAt', latestSeenDateTime] }, true, false],
+          },
+        },
+      },
+      {
         $project: {
           targetUserId: 0,
           modifier: {
@@ -106,7 +103,6 @@ export class NotificationRepository {
             locationCategories: 0,
             searchDistance: 0,
             email: 0,
-            imageUrl: 0,
           },
         },
       },
@@ -147,9 +143,7 @@ export class NotificationRepository {
     };
   }
 
-  public async getUserIdsOfAffectedEvents(
-    locationId: string,
-  ): Promise<string[]> {
+  public async getAffectedEvents(locationId: string): Promise<any[]> {
     let queryObject: any = {};
     queryObject.$and = [
       { locationId: new mongoose.Types.ObjectId(locationId) },
@@ -163,19 +157,21 @@ export class NotificationRepository {
       {
         $addFields: {
           relevantUserIds: {
-            $concatArrays: ['$guests', [{ $toString: '$userId' }]],
+            $concatArrays: ['$guests', ['$userId']],
           },
         },
       },
       {
-        $unwind: '$relevantUserIds',
-      },
-      {
-        $group: {
-          _id: null, // Grouping by null will group all documents together.
-          combinedArray: {
-            $push: '$relevantUserIds', // Push each item to the new array.
-          },
+        $project: {
+          locationId: 0,
+          startDateTime: 0,
+          expiredAt: 0,
+          duration: 0,
+          imageUrls: 0,
+          description: 0,
+          allDay: 0,
+          guests: 0,
+          userId: 0,
         },
       },
     ];
@@ -183,12 +179,12 @@ export class NotificationRepository {
     const totalMatchResults = await this.eventModel.aggregate(
       filterPipelineStage,
     );
-    return totalMatchResults[0]?.combinedArray || [];
+    return totalMatchResults;
   }
 
-  public async getUserIdsOfAffectedItineraries(
+  public async getAffectedItineraryLocations(
     locationId: string,
-  ): Promise<string[]> {
+  ): Promise<any[]> {
     let queryObject: any = {};
     queryObject.$and = [
       { locationId: new mongoose.Types.ObjectId(locationId) },
@@ -207,23 +203,24 @@ export class NotificationRepository {
         },
       },
       {
-        $unwind: '$itineraryDetail',
+        $unwind: {
+          path: '$itineraryDetail',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
-        $group: {
-          _id: null, // Grouping by null will group all documents together.
-          userIdList: {
-            $push: '$itineraryDetail.userId', // Push each item to the new array.
-          },
+        $project: {
+          _id: 0,
+          locationId: 0,
+          note: 0,
         },
       },
     ];
 
-    const results: any[] = await this.itineraryLocationModel.aggregate(
-      filterPipelineStage,
-    );
+    const totalMatchResults: any[] =
+      await this.itineraryLocationModel.aggregate(filterPipelineStage);
 
-    return results[0]?.userIdList || [];
+    return totalMatchResults;
   }
 
   public async countUnseenNotifications(targetUserId: string): Promise<number> {
