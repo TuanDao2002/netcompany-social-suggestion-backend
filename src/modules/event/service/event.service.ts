@@ -15,6 +15,7 @@ import { UpdateEventDto } from '../dto/update-event.dto';
 import { Response } from 'express';
 import { Utils } from '../../../common/utils';
 import { NotificationService } from '../../notification/service/notification.service';
+import { NotificationType } from '../../../common/notification-type.enum';
 
 @Injectable()
 export class EventService {
@@ -26,7 +27,8 @@ export class EventService {
   public async createEvent(
     eventData: CreateEventDto,
     user: UserDocument,
-  ): Promise<EventDocument> {
+    res: Response,
+  ): Promise<void> {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
     }
@@ -67,13 +69,20 @@ export class EventService {
     delete eventData.startDate;
     delete eventData.startTime;
 
-    return await this.eventRepository.createEvent(
+    const createdEvent = await this.eventRepository.createEvent(
       {
         ...eventData,
         startDateTime: luxonStartDateTime.toUTC().toBSON(),
         expiredAt: luxonExpiredDateTime.toUTC().toBSON(),
       },
       user,
+    );
+    res.json(createdEvent);
+
+    await this.notificationService.notifyAboutEventChanges(
+      String(createdEvent._id),
+      user,
+      NotificationType.EVENT_INVITATION,
     );
   }
 
@@ -225,7 +234,11 @@ export class EventService {
       }),
     );
 
-    await this.notificationService.notifyAboutEventChanges(eventId, user);
+    await this.notificationService.notifyAboutEventChanges(
+      eventId,
+      user,
+      NotificationType.EVENT_MODIFICATION,
+    );
   }
 
   public async deleteEvent(
@@ -243,6 +256,13 @@ export class EventService {
 
     await this.eventRepository.deleteEvent(eventId);
     res.json({ msg: 'The event is deleted' });
+
+    await this.notificationService.notifyAboutEventChanges(
+      eventId,
+      user,
+      NotificationType.EVENT_DELETE,
+      existingEvent
+    );
   }
 
   public isOwner(user: UserDocument, existingEvent: EventDocument): boolean {

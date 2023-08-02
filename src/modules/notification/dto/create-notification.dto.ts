@@ -8,6 +8,7 @@ import {
 import { IsNotBlank } from '../../../common/validator';
 import { ModelType } from '../../../common/model-type.enum';
 import { Type } from 'class-transformer';
+import { NotificationType } from '../../../common/notification-type.enum';
 
 export class RedirectToDto {
   @IsString()
@@ -39,4 +40,7 @@ export class CreateNotificationDto {
   @ValidateNested()
   @Type(() => RedirectToDto)
   redirectTo: RedirectToDto;
+
+  @IsEnum(NotificationType)
+  notificationType: NotificationType;
 }

@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { User } from '../../user/schema/users.schema';
 import { ModelType } from '../../../common/model-type.enum';
+import { NotificationType } from '../../../common/notification-type.enum';
 
 export type NotificationDocument = HydratedDocument<Notification>;
 
@@ -45,6 +46,13 @@ export class Notification {
     targetId: Types.ObjectId;
     modelType: ModelType;
   };
+
+  @Prop({
+    type: String,
+    enum: NotificationType,
+    required: true,
+  })
+  notificationType: NotificationType;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

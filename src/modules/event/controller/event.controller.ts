@@ -32,8 +32,9 @@ export class EventController {
   async createEvent(
     @Body() body: CreateEventDto,
     @CurrentUser() user: UserDocument,
-  ): Promise<EventDocument> {
-    return await this.eventService.createEvent(body, user);
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.eventService.createEvent(body, user, res);
   }
 
   @HttpCode(HttpStatus.OK)
