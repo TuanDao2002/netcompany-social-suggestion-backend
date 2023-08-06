@@ -156,7 +156,7 @@ export class LocationService {
 
     let queryObject: any = {};
     const formattedSearchInput = Utils.removeSpace(
-      String(input).replace(/[^\p{L}\d\s]/giu, ''),
+      String(input),
     );
     if (formattedSearchInput) {
       const regexPattern = `.*${formattedSearchInput.split(' ').join('.*')}.*`;
