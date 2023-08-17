@@ -48,8 +48,9 @@ export class LocationController {
   async updateLocation(
     @Body() body: UpdateLocationDto,
     @CurrentUser() user: UserDocument,
+    @Res() res: Response,
   ) {
-    return await this.locationService.updateLocation(body, user);
+    await this.locationService.updateLocation(body, user, res);
   }
 
   @HttpCode(HttpStatus.OK)

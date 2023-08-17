@@ -13,15 +13,13 @@ import { UpdateLocationDto } from '../dto/update-location.dto';
 import { FilterLocationDto } from '../dto/filter-location.dto';
 import { LocationSortingType } from '../../../common/location-sortring-type.enum';
 import { Response } from 'express';
-import { LikeLocationRepository } from '../repository/like-location.repository';
-import { EventRepository } from '../../event/repository/event.repository';
+import { NotificationService } from '../../notification/service/notification.service';
 
 @Injectable()
 export class LocationService {
   constructor(
     private readonly locationRepository: LocationRepository,
-    private readonly likeLocationRepository: LikeLocationRepository,
-    private readonly eventRepository: EventRepository,
+    private readonly notificationService: NotificationService,
   ) {}
 
   public async createLocation(
@@ -54,7 +52,8 @@ export class LocationService {
   public async updateLocation(
     updateLocationData: UpdateLocationDto,
     user: UserDocument,
-  ): Promise<LocationDocument> {
+    res: Response,
+  ): Promise<void> {
     if (!user) {
       throw new UnauthorizedException('You have not signed in yet');
     }
@@ -92,7 +91,12 @@ export class LocationService {
     updateLocationData.name = Utils.removeSpace(name);
     updateLocationData.description = description?.trim();
 
-    return await this.locationRepository.updateLocation(updateLocationData);
+    res.json(await this.locationRepository.updateLocation(updateLocationData));
+
+    await this.notificationService.notifyAboutLocationChanges(
+      existingLocation,
+      user,
+    );
   }
 
   public async deleteLocation(

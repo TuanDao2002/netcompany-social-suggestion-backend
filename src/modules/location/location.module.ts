@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { LocationController } from './controller/location.controller';
 import { LocationService } from './service/location.service';
 import { LocationRepository } from './repository/location.repository';
@@ -13,6 +13,23 @@ import { LikeLocationService } from './service/like-location.service';
 import { LikeLocationRepository } from './repository/like-location.repository';
 import { Event, EventSchema } from '../event/schema/event.schema';
 import { EventRepository } from '../event/repository/event.repository';
+import { NotificationService } from '../notification/service/notification.service';
+import { NotificationRepository } from '../notification/repository/notification.repository';
+import { PusherService } from '../notification/service/pusher.service';
+import {
+  Notification,
+  NotificationSchema,
+} from '../notification/schema/notification.schema';
+import { NotificationModule } from '../notification/notification.module';
+import { EventModule } from '../event/event.module';
+import {
+  ItineraryLocation,
+  ItineraryLocationSchema,
+} from '../itinerary/schema/itinerary-location.schema';
+import {
+  NotificationSeen,
+  NotificationSeenSchema,
+} from '../notification/schema/notification-seen.schema';
 
 @Module({
   imports: [
@@ -21,7 +38,12 @@ import { EventRepository } from '../event/repository/event.repository';
       { name: Location.name, schema: LocationSchema },
       { name: LikeLocation.name, schema: LikeLocationSchema },
       { name: Event.name, schema: EventSchema },
+      { name: Notification.name, schema: NotificationSchema },
+      { name: NotificationSeen.name, schema: NotificationSeenSchema },
+      { name: ItineraryLocation.name, schema: ItineraryLocationSchema },
     ]),
+    forwardRef(() => NotificationModule),
+    forwardRef(() => EventModule),
   ],
   controllers: [LocationController],
   providers: [
@@ -29,7 +51,10 @@ import { EventRepository } from '../event/repository/event.repository';
     LocationRepository,
     LikeLocationService,
     LikeLocationRepository,
+    NotificationService,
+    NotificationRepository,
     EventRepository,
+    PusherService,
   ],
   exports: [LocationService],
 })

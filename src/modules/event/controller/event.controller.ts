@@ -32,8 +32,9 @@ export class EventController {
   async createEvent(
     @Body() body: CreateEventDto,
     @CurrentUser() user: UserDocument,
-  ): Promise<EventDocument> {
-    return await this.eventService.createEvent(body, user);
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.eventService.createEvent(body, user, res);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -69,8 +70,9 @@ export class EventController {
   async updateEvent(
     @Body() body: UpdateEventDto,
     @CurrentUser() user: UserDocument,
-  ): Promise<EventDocument> {
-    return await this.eventService.updateEvent(body, user);
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.eventService.updateEvent(body, user, res);
   }
 
   @HttpCode(HttpStatus.OK)
