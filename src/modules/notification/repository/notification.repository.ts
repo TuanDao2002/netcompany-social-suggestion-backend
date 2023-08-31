@@ -210,7 +210,6 @@ export class NotificationRepository {
       },
       {
         $project: {
-          _id: 0,
           locationId: 0,
           note: 0,
         },
