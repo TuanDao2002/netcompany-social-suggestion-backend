@@ -31,7 +31,7 @@ export class Notification {
   @Prop({
     type: {
       targetId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         required: true,
       },
       modelType: {
@@ -43,7 +43,7 @@ export class Notification {
     required: true,
   })
   redirectTo: {
-    targetId: Types.ObjectId;
+    targetId: String;
     modelType: ModelType;
   };
 
