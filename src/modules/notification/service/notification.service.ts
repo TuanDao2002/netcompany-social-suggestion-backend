@@ -181,7 +181,7 @@ export class NotificationService {
         targetUserId: userId,
         modifierId: String(modifier._id),
         redirectTo: {
-          targetId: String(itineraryLocation._id),
+          targetId: String(itineraryLocation.itineraryId) + "-" + String(itineraryLocation._id),
           modelType: ModelType.ITINERARY,
         },
         notificationType: NotificationType.ITINERARY_MODIFICATION
